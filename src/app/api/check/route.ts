@@ -119,9 +119,9 @@ export async function GET() {
     },
     {
       headers: {
-        // Cache at the edge for 5 minutes to avoid hammering Moltbook.
+        // Cache at the edge for 10 minutes to avoid hammering Moltbook.
         // Serve slightly stale while revalidating to keep the UI snappy.
-        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
+        "Cache-Control": "public, s-maxage=600, stale-while-revalidate=120",
       },
     }
   );

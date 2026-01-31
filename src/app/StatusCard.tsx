@@ -60,7 +60,7 @@ export default function StatusCard() {
 
   useEffect(() => {
     doFetch();
-    const id = setInterval(doFetch, 60_000);
+    const id = setInterval(doFetch, 120_000);
     return () => clearInterval(id);
   }, [doFetch]);
 
@@ -239,9 +239,9 @@ export default function StatusCard() {
       {/* Info Footer */}
       <div className="flex items-center justify-between text-xs text-zinc-500 pt-2 flex-wrap gap-2">
         <div className="flex items-center gap-4">
-          <span>Edge cached: 5 min</span>
+          <span>Edge cached: 10 min</span>
           <span>·</span>
-          <span>Auto-refresh: 60s</span>
+          <span>Auto-refresh: 2 min</span>
         </div>
         {view.status !== "loading" && "checkedAt" in view && view.checkedAt && (
           <span>
