@@ -1,5 +1,9 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.10 — 2026-01-31
+
+- Add an endpoint drilldown to “Recent Checks” so you can view failures/latency over time for a specific Moltbook surface (not just overall).
+
 ## 0.2.9 — 2026-01-31
 
 - Restore `/api/agent-check/schema` (JSON schema) so tools/agents can integrate without guessing response shape.

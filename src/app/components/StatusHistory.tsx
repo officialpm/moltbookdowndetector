@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export type HistoryProbeResult = {
   name: string;
@@ -102,6 +102,22 @@ export function useStatusHistory() {
   return { history, addEntry, maxEntries: MAX_ENTRIES };
 }
 
+type ViewMode =
+  | { kind: "overall" }
+  | { kind: "endpoint"; endpointName: string };
+
+function fmtTime(ts: string) {
+  try {
+    return new Date(ts).toLocaleTimeString();
+  } catch {
+    return ts;
+  }
+}
+
+function getEndpointResult(entry: HistoryEntry, endpointName: string) {
+  return entry.results.find((r) => r.name === endpointName) || null;
+}
+
 export default function StatusHistory({
   history,
   maxEntries,
@@ -109,47 +125,122 @@ export default function StatusHistory({
   history: HistoryEntry[];
   maxEntries?: number;
 }) {
+  const endpointNames = useMemo(() => {
+    const s = new Set<string>();
+    for (const entry of history) {
+      for (const r of entry.results || []) s.add(r.name);
+    }
+    return [...s].sort((a, b) => a.localeCompare(b));
+  }, [history]);
+
+  const [view, setView] = useState<ViewMode>({ kind: "overall" });
+
+  const effectiveView = useMemo<ViewMode>(() => {
+    if (view.kind === "endpoint") {
+      const stillExists = endpointNames.includes(view.endpointName);
+      if (!stillExists) return { kind: "overall" };
+    }
+    return view;
+  }, [endpointNames, view]);
+
   if (history.length === 0) return null;
 
   return (
     <div className="mt-6">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium text-zinc-400">Recent Checks</h3>
-        <span className="text-xs text-zinc-500">
-          Last {history.length}
-          {typeof maxEntries === "number" ? ` / ${maxEntries}` : ""} checks
-        </span>
+      <div className="flex items-center justify-between mb-3 gap-4 flex-wrap">
+        <div>
+          <h3 className="text-sm font-medium text-zinc-400">Recent Checks</h3>
+          <div className="mt-0.5 text-xs text-zinc-500">
+            Last {history.length}
+            {typeof maxEntries === "number" ? ` / ${maxEntries}` : ""} checks
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-zinc-500">View</span>
+          <select
+            value={
+              effectiveView.kind === "overall"
+                ? "__overall__"
+                : effectiveView.endpointName
+            }
+            onChange={(e) => {
+              const v = e.target.value;
+              if (v === "__overall__") setView({ kind: "overall" });
+              else setView({ kind: "endpoint", endpointName: v });
+            }}
+            className="rounded-lg border border-zinc-800 bg-zinc-950/40 px-2 py-1 text-xs text-zinc-200"
+          >
+            <option value="__overall__">Overall</option>
+            {endpointNames.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
+
       <div className="flex gap-1 items-end h-8">
         {history.map((entry, i) => {
-          const height = Math.max(
-            20,
-            Math.min(100, (1 - entry.totalMs / 3000) * 100),
-          );
+          const datum =
+            effectiveView.kind === "overall"
+              ? { ok: entry.ok, ms: entry.totalMs, label: "Overall" }
+              : (() => {
+                  const r = getEndpointResult(entry, effectiveView.endpointName);
+                  if (!r) {
+                    return {
+                      ok: null as boolean | null,
+                      ms: Number.NaN,
+                      label: effectiveView.endpointName,
+                    };
+                  }
+                  return { ok: r.ok, ms: r.ms, label: r.name };
+                })();
+
+          const ms = Number.isFinite(datum.ms) ? datum.ms : 0;
+          const height = Math.max(20, Math.min(100, (1 - ms / 3000) * 100));
+
+          const base =
+            datum.ok === null
+              ? "bg-zinc-700/50 hover:bg-zinc-600/60"
+              : datum.ok
+                ? "bg-emerald-500/80 hover:bg-emerald-400"
+                : "bg-red-500/80 hover:bg-red-400";
+
+          const title =
+            datum.ok === null
+              ? `${fmtTime(entry.timestamp)} — no data for ${datum.label}`
+              : `${fmtTime(entry.timestamp)} — ${datum.label}: ${datum.ok ? "OK" : "Failed"} · ${datum.ms}ms`;
+
           return (
             <div
               key={entry.timestamp + i}
               className="group relative flex-1 max-w-3"
-              title={`${new Date(entry.timestamp).toLocaleTimeString()} - ${entry.totalMs}ms`}
+              title={title}
             >
               <div
-                className={`w-full rounded-sm transition-all ${
-                  entry.ok
-                    ? "bg-emerald-500/80 hover:bg-emerald-400"
-                    : "bg-red-500/80 hover:bg-red-400"
-                }`}
+                className={`w-full rounded-sm transition-all ${base}`}
                 style={{ height: `${height}%` }}
               />
               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-10">
                 <div className="bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1 text-xs whitespace-nowrap shadow-xl">
                   <div
-                    className={entry.ok ? "text-emerald-400" : "text-red-400"}
+                    className={
+                      datum.ok === null
+                        ? "text-zinc-300"
+                        : datum.ok
+                          ? "text-emerald-400"
+                          : "text-red-400"
+                    }
                   >
-                    {entry.ok ? "OK" : "Failed"}
+                    {datum.ok === null ? "No data" : datum.ok ? "OK" : "Failed"}
                   </div>
-                  <div className="text-zinc-400">{entry.totalMs}ms</div>
+                  <div className="text-zinc-400">
+                    {datum.ok === null ? "—" : `${datum.ms}ms`}
+                  </div>
                   <div className="text-zinc-500 text-[10px]">
-                    {new Date(entry.timestamp).toLocaleTimeString()}
+                    {fmtTime(entry.timestamp)}
                   </div>
                 </div>
               </div>
@@ -157,6 +248,13 @@ export default function StatusHistory({
           );
         })}
       </div>
+
+      {effectiveView.kind === "endpoint" && (
+        <p className="mt-2 text-[11px] text-zinc-600">
+          Endpoint view uses your browser&apos;s stored probe details. Older entries may show “No
+          data” if they were recorded before endpoint-level tracking existed.
+        </p>
+      )}
     </div>
   );
 }
