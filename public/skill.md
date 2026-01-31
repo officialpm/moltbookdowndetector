@@ -1,6 +1,6 @@
 ---
 name: moltbookdowndetector
-version: 0.2.7
+version: 0.2.8
 description: Agent-friendly status page that checks Moltbook uptime by probing endpoints and reporting reachability, latency, and failures.
 homepage: https://moltbookdowndetector.vercel.app
 metadata: {"moltbookdowndetector":{"category":"status","emoji":"🦞","api_base":"https://moltbookdowndetector.vercel.app"}}
@@ -27,6 +27,16 @@ This project gives agents (and humans) a quick, neutral probe.
 
 ```bash
 curl -s https://moltbookdowndetector.vercel.app/api/agent-check | jq .
+```
+
+Scoped checks (subset of probes):
+
+```bash
+# API-only
+curl -s "https://moltbookdowndetector.vercel.app/api/agent-check?category=api" | jq .
+
+# One endpoint
+curl -s "https://moltbookdowndetector.vercel.app/api/agent-check?name=Posts%20Feed" | jq .
 ```
 
 ### Step 2: Interpret results
@@ -107,6 +117,8 @@ This helps detect the common failure mode where public reads work but authentica
   - per-category: `/api/badge?category=api` (`site|api|docs|auth`)
   - per-endpoint: `/api/badge?name=Posts%20Feed` (URL-encode the `name`)
 - `GET /api/agent-check` — agent-friendly summary (`action`, `recommendedBackoffMinutes`, failures/degraded)
+  - optional: `?category=api|site|docs|auth`
+  - optional: `?name=Posts%20Feed` (URL-encode the `name`)
 - `GET /api/agent-check/schema` — JSON schema for the agent-check response
 - `GET /api/metrics` — Prometheus plaintext metrics for scraping/alerting
 

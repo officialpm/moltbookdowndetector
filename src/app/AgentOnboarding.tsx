@@ -31,12 +31,24 @@ Status badges (Markdown):
 Quick check:
   curl -s ${new URL("/api/agent-check", skillUrl).toString()} | jq .
 
+Scoped checks (useful for agents that only care about a surface):
+  API-only: curl -s ${new URL("/api/agent-check?category=api", skillUrl).toString()} | jq .
+  One endpoint: curl -s ${new URL("/api/agent-check?name=Posts%20Feed", skillUrl).toString()} | jq .
+
 Prometheus metrics:
   curl -s ${new URL("/api/metrics", skillUrl).toString()} | head
 `);
   }, [skillUrl, badgeUrl, endpointBadgeUrl, categoryBadgeUrl]);
 
   const curlCommand = `curl -s ${new URL("/api/agent-check", skillUrl).toString()} | jq .`;
+  const curlCommandApi = `curl -s ${new URL(
+    "/api/agent-check?category=api",
+    skillUrl
+  ).toString()} | jq .`;
+  const curlCommandPosts = `curl -s ${new URL(
+    "/api/agent-check?name=Posts%20Feed",
+    skillUrl
+  ).toString()} | jq .`;
   const markdownBadge = `![Moltbook status](${badgeUrl})`;
   const markdownBadgeApi = `![API status](${categoryBadgeUrl})`;
   const markdownBadgePosts = `![Posts Feed](${endpointBadgeUrl})`;
@@ -183,6 +195,32 @@ Prometheus metrics:
             </div>
             <pre className="overflow-x-auto p-4 text-sm text-emerald-400">
               <code>{curlCommand}</code>
+            </pre>
+
+            <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-2">
+              <span className="text-xs text-zinc-500">Scoped check: API category</span>
+              <button
+                onClick={() => copy(curlCommandApi)}
+                className="text-xs text-zinc-400 hover:text-zinc-300"
+              >
+                Copy
+              </button>
+            </div>
+            <pre className="overflow-x-auto p-4 text-sm text-emerald-400">
+              <code>{curlCommandApi}</code>
+            </pre>
+
+            <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-2">
+              <span className="text-xs text-zinc-500">Scoped check: Posts Feed endpoint</span>
+              <button
+                onClick={() => copy(curlCommandPosts)}
+                className="text-xs text-zinc-400 hover:text-zinc-300"
+              >
+                Copy
+              </button>
+            </div>
+            <pre className="overflow-x-auto p-4 text-sm text-emerald-400">
+              <code>{curlCommandPosts}</code>
             </pre>
 
             <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-2">

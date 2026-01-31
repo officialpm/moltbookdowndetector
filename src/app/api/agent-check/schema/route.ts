@@ -22,6 +22,17 @@ export async function GET() {
       properties: {
         ok: { type: "boolean" },
         checkedAt: { type: "string", description: "ISO timestamp" },
+        scope: {
+          type: "object",
+          additionalProperties: false,
+          description:
+            "Optional scope for subset checks (e.g. ?category=api or ?name=Posts%20Feed)",
+          properties: {
+            category: { type: "string" },
+            name: { type: "string" },
+          },
+          required: [],
+        },
         action: { type: "string", enum: ["OK", "BACKOFF"] },
         recommendedBackoffMinutes: { type: "number", minimum: 0 },
         failures: {

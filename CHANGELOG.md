@@ -1,5 +1,10 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.8 — 2026-01-31
+
+- Add scoped agent checks to `/api/agent-check` via `?category=` and/or `?name=` so agents can backoff only when the specific Moltbook surface they need is degraded.
+- Expose scoped check examples in the Agent Integration UI and `public/skill.md`.
+
 ## 0.2.7 — 2026-01-31
 
 - Upgrade `/api/badge` to support per-category and per-endpoint badges via query params (`?category=api`, `?name=Posts%20Feed`), so dashboards/agents can monitor specific surfaces.
