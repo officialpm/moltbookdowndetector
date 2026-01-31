@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type HistoryEntry = {
   timestamp: string;
@@ -25,13 +25,13 @@ export function useStatusHistory() {
     }
   }, []);
 
-  const addEntry = (entry: HistoryEntry) => {
+  const addEntry = useCallback((entry: HistoryEntry) => {
     setHistory((prev) => {
       const updated = [entry, ...prev].slice(0, MAX_ENTRIES);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       return updated;
     });
-  };
+  }, []);
 
   return { history, addEntry };
 }

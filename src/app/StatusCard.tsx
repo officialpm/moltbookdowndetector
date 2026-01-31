@@ -239,7 +239,7 @@ export default function StatusCard() {
       {/* Info Footer */}
       <div className="flex items-center justify-between text-xs text-zinc-500 pt-2 flex-wrap gap-2">
         <div className="flex items-center gap-4">
-          <span>Edge cached: 10 min</span>
+          <span>Cached: 5 min</span>
           <span>·</span>
           <span>Auto-refresh: 2 min</span>
         </div>

@@ -1,6 +1,19 @@
+import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
+
+// Revalidate cached data every 5 minutes (300 seconds)
+export const revalidate = 300;
+
+type CheckResult = {
+  name: string;
+  url: string;
+  status: number;
+  ok: boolean;
+  ms: number;
+  error?: string;
+};
 
 type CheckTarget = {
   name: string;
@@ -40,14 +53,18 @@ async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: numbe
   }
 }
 
-export async function GET() {
+// The actual probe logic - this gets cached by unstable_cache
+async function performProbe(): Promise<{
+  ok: boolean;
+  checkedAt: string;
+  totalMs: number;
+  results: CheckResult[];
+}> {
   const startedAt = Date.now();
-
   const auth = moltbookAuthHeader();
 
   const allTargets: (CheckTarget & { auth?: boolean })[] = [
     ...targets.map((t) => ({ ...t, auth: false })),
-    // Authenticated probe (optional): catches the common failure mode we see in agents.
     ...(auth
       ? [
           {
@@ -70,7 +87,7 @@ export async function GET() {
           {
             method: t.method ?? "GET",
             headers: {
-              "user-agent": "moltbookdowndetector/0.1.0 (+https://github.com/officialpm/moltbookdowndetector)",
+              "user-agent": "moltbookdowndetector/0.2.0 (+https://github.com/officialpm/moltbookdowndetector)",
               ...(t.auth && auth ? auth : {}),
             },
             redirect: "follow",
@@ -80,7 +97,6 @@ export async function GET() {
         );
 
         const ms = Date.now() - s;
-
         const ok = res.ok || res.status === 401 || res.status === 403;
 
         return {
@@ -110,19 +126,28 @@ export async function GET() {
 
   const ok = results.every((r) => r.ok);
 
-  return NextResponse.json(
-    {
-      ok,
-      checkedAt: new Date().toISOString(),
-      totalMs: Date.now() - startedAt,
-      results,
+  return {
+    ok,
+    checkedAt: new Date().toISOString(),
+    totalMs: Date.now() - startedAt,
+    results,
+  };
+}
+
+// Cached version of the probe - revalidates every 5 minutes
+const getCachedProbe = unstable_cache(
+  performProbe,
+  ["moltbook-status-check"],
+  { revalidate: 300 } // 5 minutes
+);
+
+export async function GET() {
+  const data = await getCachedProbe();
+
+  return NextResponse.json(data, {
+    headers: {
+      // CDN cache at edge for 5 minutes, serve stale while revalidating
+      "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
     },
-    {
-      headers: {
-        // Cache at the edge for 10 minutes to avoid hammering Moltbook.
-        // Serve slightly stale while revalidating to keep the UI snappy.
-        "Cache-Control": "public, s-maxage=600, stale-while-revalidate=120",
-      },
-    }
-  );
+  });
 }
