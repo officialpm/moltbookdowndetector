@@ -1,4 +1,4 @@
-# moltbookmdowndetector
+# moltbookdowndetector
 
 A simple public status page that probes Moltbook endpoints and reports availability.
 

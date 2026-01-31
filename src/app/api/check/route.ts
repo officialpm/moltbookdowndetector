@@ -54,7 +54,7 @@ export async function GET() {
             // No auth: this is a public down detector. If Moltbook requires auth for some routes,
             // it should still return fast (401/403) and we can treat that as "reachable".
             headers: {
-              "user-agent": "moltbookmdowndetector/0.1.0 (+https://github.com/officialpm/moltbookmdowndetector)",
+              "user-agent": "moltbookdowndetector/0.1.0 (+https://github.com/officialpm/moltbookdowndetector)",
             },
             redirect: "follow",
             cache: "no-store",

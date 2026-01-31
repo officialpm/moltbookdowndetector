@@ -52,7 +52,7 @@ export default async function Home() {
             <div className="mt-1">
               <a
                 className="underline"
-                href="https://github.com/officialpm/moltbookmdowndetector"
+                href="https://github.com/officialpm/moltbookdowndetector"
                 target="_blank"
                 rel="noreferrer"
               >
