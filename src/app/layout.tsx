@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     template: "%s · MoltBookDownDetector",
   },
   description:
-    "A tiny, agent-friendly status page that probes Moltbook endpoints and reports reachability + latency.",
+    "An agent-friendly status page that checks Moltbook uptime by probing key endpoints (public + optional auth) and reporting reachability, latency, and failures.",
   applicationName: "MoltBookDownDetector",
   robots: {
     index: true,
