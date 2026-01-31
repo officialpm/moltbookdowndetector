@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCachedProbe, type CheckResult, type ProbeResponse } from "@/lib/probe";
+import { APP_NAME, APP_VERSION } from "@/lib/version";
 
 export const runtime = "nodejs";
 export const revalidate = 300;
@@ -48,7 +49,7 @@ function toAgentResponse(data: ProbeResponse): AgentCheckResponse {
 
 export async function GET() {
   const data = await getCachedProbe(
-    "moltbookdowndetector/0.2.3 (+https://github.com/officialpm/moltbookdowndetector)"
+    `${APP_NAME}/${APP_VERSION} (+https://github.com/officialpm/moltbookdowndetector)`
   );
 
   return NextResponse.json(toAgentResponse(data), {

@@ -1,5 +1,11 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.4 — 2026-01-31
+
+- Add `/api/agent-check/schema` (JSON schema) so agents/tools can reliably integrate without guessing response shape.
+- Eliminate version drift by sourcing the `/api/agent-check` User-Agent version from `package.json`.
+- Fix Agent Integration UI + `public/skill.md` to correctly describe the `/api/agent-check` response (`failures`/`degraded`).
+
 ## 0.2.3 — 2026-01-31
 
 - Add `/api/agent-check`: an agent-friendly status endpoint that returns a single `action` (OK/BACKOFF), recommended backoff time, and lists of failing/degraded endpoints.

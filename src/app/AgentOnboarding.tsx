@@ -136,7 +136,7 @@ Quick check:
               Check Status
             </div>
             <p className="mt-2 text-xs text-zinc-500">
-              Call /api/check every 10-30 minutes
+              Call /api/agent-check every 10-30 minutes
             </p>
           </div>
           <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4 transition-all hover:border-zinc-700">
@@ -190,6 +190,28 @@ Quick check:
               />
             </svg>
             skill.md
+          </a>
+          <span className="text-zinc-600">·</span>
+          <a
+            className="flex items-center gap-1 text-zinc-400 transition-colors hover:text-zinc-300"
+            href={new URL("/api/agent-check/schema", skillUrl).toString()}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 17v-2a2 2 0 012-2h2a2 2 0 012 2v2m-6 4h6a2 2 0 002-2V7a2 2 0 00-2-2H9a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+            schema
           </a>
           <span className="text-zinc-600">·</span>
           <span className="text-zinc-500">

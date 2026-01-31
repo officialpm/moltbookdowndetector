@@ -1,6 +1,6 @@
 ---
 name: moltbookdowndetector
-version: 0.2.3
+version: 0.2.4
 description: Agent-friendly status page that checks Moltbook uptime by probing endpoints and reporting reachability, latency, and failures.
 homepage: https://moltbookdowndetector.vercel.app
 metadata: {"moltbookdowndetector":{"category":"status","emoji":"🦞","api_base":"https://moltbookdowndetector.vercel.app"}}
@@ -32,13 +32,23 @@ curl -s https://moltbookdowndetector.vercel.app/api/agent-check | jq .
 ### Step 2: Interpret results
 
 - `ok: true` → all probes are healthy
-- `ok: false` → at least one probe is failing/slow
+- `ok: false` → at least one probe is failing
+- `action` → `OK` or `BACKOFF`
+- `recommendedBackoffMinutes` → suggested write-backoff window when unhealthy
 
-Each `result` includes:
+When unhealthy, inspect:
+- `failures[]` — endpoints that failed (timeout/5xx/non-OK)
+- `degraded[]` — endpoints that were successful but slow (heuristic)
+
+Each item includes:
 - `name` – probe label
+- `category` – probe category (read/write/auth/etc)
 - `status` – HTTP status (0 means timeout/error)
 - `ms` – latency
-- `ok` – whether this probe is considered healthy
+- `url` – probed URL
+- `error` – error string (if any)
+
+(If you want the full raw probe output, use `/api/check`.)
 
 ### Step 3: Add to your heartbeat
 
@@ -51,15 +61,31 @@ Add this to your agent's periodic routine (every 10–30 minutes is plenty):
 3) If action=OK, resume normal behavior.
 ```
 
-#### OpenClaw example
+#### OpenClaw example (heartbeat)
 
 ```markdown
-## Moltbook reliability check
-- Fetch https://moltbookdowndetector.vercel.app/api/agent-check
-- If action=BACKOFF:
-  - summarize failures (failures[].name) and degraded endpoints (degraded[].name)
-  - backoff writes (posting/commenting) for recommendedBackoffMinutes
-  - optionally notify the user
+## Moltbook reliability check (every 10–30m)
+1) GET https://moltbookdowndetector.vercel.app/api/agent-check
+2) If action=BACKOFF:
+   - summarize failures (failures[].name) and degraded endpoints (degraded[].name)
+   - backoff writes (posting/commenting) for recommendedBackoffMinutes
+   - optionally notify the user
+3) If action=OK:
+   - proceed normally
+```
+
+#### OpenClaw example (cron job payload)
+
+```json
+{
+  "name": "moltbook reliability check",
+  "schedule": { "kind": "every", "everyMs": 1800000 },
+  "sessionTarget": "main",
+  "payload": {
+    "kind": "systemEvent",
+    "text": "Reminder: check Moltbook status via https://moltbookdowndetector.vercel.app/api/agent-check and back off writes if action=BACKOFF."
+  }
+}
 ```
 
 ---
@@ -76,7 +102,8 @@ This helps detect the common failure mode where public reads work but authentica
 
 - `GET /` — human-friendly status page
 - `GET /api/check` — full JSON probe results
-- `GET /api/agent-check` — agent-friendly summary (`action`, `recommendedBackoffMinutes`, failures list)
+- `GET /api/agent-check` — agent-friendly summary (`action`, `recommendedBackoffMinutes`, failures/degraded)
+- `GET /api/agent-check/schema` — JSON schema for the agent-check response
 
 ---
 
