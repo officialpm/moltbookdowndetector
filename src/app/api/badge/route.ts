@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCachedProbe } from "@/lib/probe";
+import { getCachedProbe, type CheckCategory } from "@/lib/probe";
 import { APP_NAME, APP_VERSION } from "@/lib/version";
 
 export const runtime = "nodejs";
@@ -46,17 +46,63 @@ function renderBadge(label: string, message: string, color: string) {
 </svg>`;
 }
 
-export async function GET() {
+function coerceCategory(x: string | null): CheckCategory | null {
+  if (!x) return null;
+  if (x === "site" || x === "api" || x === "docs" || x === "auth") return x;
+  return null;
+}
+
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+
+  // Optional filters:
+  // - ?name=<probe name> (exact match)
+  // - ?category=site|api|docs|auth
+  const name = url.searchParams.get("name");
+  const category = coerceCategory(url.searchParams.get("category"));
+
   const data = await getCachedProbe(
     `${APP_NAME}/${APP_VERSION} (+https://github.com/officialpm/moltbookdowndetector)`
   );
 
-  const ok = Boolean(data.ok);
-  const svg = renderBadge(
-    "moltbook",
-    ok ? "operational" : "degraded",
-    ok ? "#22c55e" : "#ef4444"
-  );
+  const results = (data.results || []).filter((r) => {
+    if (category && r.category !== category) return false;
+    if (name && r.name !== name) return false;
+    return true;
+  });
+
+  // Default = overall status
+  let label = "moltbook";
+  let message = data.ok ? "operational" : "degraded";
+  let color = data.ok ? "#22c55e" : "#ef4444";
+
+  if (category) {
+    label = category;
+    const ok = results.length ? results.every((r) => r.ok) : false;
+    message = results.length ? (ok ? "ok" : "fail") : "unknown";
+    color = message === "ok" ? "#22c55e" : message === "fail" ? "#ef4444" : "#6b7280";
+  }
+
+  if (name) {
+    label = name;
+    const r = results[0];
+
+    if (!r) {
+      message = "unknown";
+      color = "#6b7280";
+    } else if (!r.ok) {
+      message = "fail";
+      color = "#ef4444";
+    } else if (r.ms >= 2500) {
+      message = "slow";
+      color = "#f59e0b";
+    } else {
+      message = "ok";
+      color = "#22c55e";
+    }
+  }
+
+  const svg = renderBadge(label, message, color);
 
   return new NextResponse(svg, {
     status: 200,

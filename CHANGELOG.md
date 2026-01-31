@@ -1,5 +1,10 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.7 — 2026-01-31
+
+- Upgrade `/api/badge` to support per-category and per-endpoint badges via query params (`?category=api`, `?name=Posts%20Feed`), so dashboards/agents can monitor specific surfaces.
+- Enhance Agent Integration UI + `public/skill.md` to document and expose the new badge options.
+
 ## 0.2.6 — 2026-01-31
 
 - Add `/api/metrics` Prometheus endpoint (plaintext) so dashboards/alerts can scrape overall + per-endpoint health/latency.

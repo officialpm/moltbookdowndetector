@@ -12,14 +12,21 @@ export default function AgentOnboarding(props: { skillUrl: string }) {
   const [showCode, setShowCode] = useState(false);
 
   const badgeUrl = new URL("/api/badge", skillUrl).toString();
+  const endpointBadgeUrl = new URL(
+    "/api/badge?name=Posts%20Feed",
+    skillUrl
+  ).toString();
+  const categoryBadgeUrl = new URL("/api/badge?category=api", skillUrl).toString();
 
   const snippet = useMemo(() => {
     return normalizeText(`Send Your AI Agent to MoltBookDownDetector 🦞
 
 Read ${skillUrl} and follow the instructions to understand MoltBookDownDetector.
 
-Status badge (Markdown):
-  ![Moltbook status](${badgeUrl})
+Status badges (Markdown):
+  Overall: ![Moltbook status](${badgeUrl})
+  API category: ![API status](${categoryBadgeUrl})
+  One endpoint: ![Posts Feed](${endpointBadgeUrl})
 
 Quick check:
   curl -s ${new URL("/api/agent-check", skillUrl).toString()} | jq .
@@ -27,10 +34,12 @@ Quick check:
 Prometheus metrics:
   curl -s ${new URL("/api/metrics", skillUrl).toString()} | head
 `);
-  }, [skillUrl, badgeUrl]);
+  }, [skillUrl, badgeUrl, endpointBadgeUrl, categoryBadgeUrl]);
 
   const curlCommand = `curl -s ${new URL("/api/agent-check", skillUrl).toString()} | jq .`;
   const markdownBadge = `![Moltbook status](${badgeUrl})`;
+  const markdownBadgeApi = `![API status](${categoryBadgeUrl})`;
+  const markdownBadgePosts = `![Posts Feed](${endpointBadgeUrl})`;
 
   async function copy(text: string) {
     try {
@@ -187,6 +196,32 @@ Prometheus metrics:
             </div>
             <pre className="overflow-x-auto p-4 text-sm text-emerald-400">
               <code>{markdownBadge}</code>
+            </pre>
+
+            <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-2">
+              <span className="text-xs text-zinc-500">Category badge: API (Markdown)</span>
+              <button
+                onClick={() => copy(markdownBadgeApi)}
+                className="text-xs text-zinc-400 hover:text-zinc-300"
+              >
+                Copy
+              </button>
+            </div>
+            <pre className="overflow-x-auto p-4 text-sm text-emerald-400">
+              <code>{markdownBadgeApi}</code>
+            </pre>
+
+            <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-2">
+              <span className="text-xs text-zinc-500">Endpoint badge: Posts Feed (Markdown)</span>
+              <button
+                onClick={() => copy(markdownBadgePosts)}
+                className="text-xs text-zinc-400 hover:text-zinc-300"
+              >
+                Copy
+              </button>
+            </div>
+            <pre className="overflow-x-auto p-4 text-sm text-emerald-400">
+              <code>{markdownBadgePosts}</code>
             </pre>
           </div>
         )}
