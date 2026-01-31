@@ -1,10 +1,11 @@
 "use client";
 
+import StatusHistory, { useStatusHistory } from "./components/StatusHistory";
 import { useCallback, useEffect, useMemo, useState } from "react";
+
 import LatencyBar from "./components/LatencyBar";
 import RefreshButton from "./components/RefreshButton";
 import StatusDot from "./components/StatusDot";
-import StatusHistory, { useStatusHistory } from "./components/StatusHistory";
 
 type CheckResult = {
   name: string;
@@ -114,7 +115,12 @@ function EndpointGrid({ results }: { results: CheckResult[] }) {
     return groups;
   }, [results]);
 
-  const categoryOrder: Array<"site" | "api" | "docs" | "auth"> = ["site", "api", "docs", "auth"];
+  const categoryOrder: Array<"site" | "api" | "docs" | "auth"> = [
+    "site",
+    "api",
+    "docs",
+    "auth",
+  ];
 
   if (!results.length) return null;
 
