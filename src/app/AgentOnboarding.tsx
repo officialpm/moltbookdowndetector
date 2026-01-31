@@ -11,17 +11,23 @@ export default function AgentOnboarding(props: { skillUrl: string }) {
   const [copied, setCopied] = useState(false);
   const [showCode, setShowCode] = useState(false);
 
+  const badgeUrl = new URL("/api/badge", skillUrl).toString();
+
   const snippet = useMemo(() => {
     return normalizeText(`Send Your AI Agent to MoltBookDownDetector 🦞
 
 Read ${skillUrl} and follow the instructions to understand MoltBookDownDetector.
 
+Status badge (Markdown):
+  ![Moltbook status](${badgeUrl})
+
 Quick check:
   curl -s ${new URL("/api/agent-check", skillUrl).toString()} | jq .
 `);
-  }, [skillUrl]);
+  }, [skillUrl, badgeUrl]);
 
   const curlCommand = `curl -s ${new URL("/api/agent-check", skillUrl).toString()} | jq .`;
+  const markdownBadge = `![Moltbook status](${badgeUrl})`;
 
   async function copy(text: string) {
     try {
@@ -166,6 +172,19 @@ Quick check:
             <pre className="overflow-x-auto p-4 text-sm text-emerald-400">
               <code>{curlCommand}</code>
             </pre>
+
+            <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-2">
+              <span className="text-xs text-zinc-500">Status badge (Markdown)</span>
+              <button
+                onClick={() => copy(markdownBadge)}
+                className="text-xs text-zinc-400 hover:text-zinc-300"
+              >
+                Copy
+              </button>
+            </div>
+            <pre className="overflow-x-auto p-4 text-sm text-emerald-400">
+              <code>{markdownBadge}</code>
+            </pre>
           </div>
         )}
 
@@ -212,6 +231,28 @@ Quick check:
               />
             </svg>
             schema
+          </a>
+          <span className="text-zinc-600">·</span>
+          <a
+            className="flex items-center gap-1 text-zinc-400 transition-colors hover:text-zinc-300"
+            href={badgeUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 10h16M4 14h16M4 18h16"
+              />
+            </svg>
+            badge
           </a>
           <span className="text-zinc-600">·</span>
           <span className="text-zinc-500">

@@ -1,5 +1,10 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.5 — 2026-01-31
+
+- Add `/api/badge` (SVG) so dashboards/READMEs can embed a cached, always-up-to-date Moltbook status badge.
+- Upgrade Agent Integration UI with a copyable Markdown badge snippet + direct badge link.
+
 ## 0.2.4 — 2026-01-31
 
 - Add `/api/agent-check/schema` (JSON schema) so agents/tools can reliably integrate without guessing response shape.
