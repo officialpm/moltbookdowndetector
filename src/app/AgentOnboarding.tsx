@@ -23,6 +23,9 @@ Status badge (Markdown):
 
 Quick check:
   curl -s ${new URL("/api/agent-check", skillUrl).toString()} | jq .
+
+Prometheus metrics:
+  curl -s ${new URL("/api/metrics", skillUrl).toString()} | head
 `);
   }, [skillUrl, badgeUrl]);
 

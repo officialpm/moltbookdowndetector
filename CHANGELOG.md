@@ -1,5 +1,11 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.6 — 2026-01-31
+
+- Add `/api/metrics` Prometheus endpoint (plaintext) so dashboards/alerts can scrape overall + per-endpoint health/latency.
+- Add Metrics link in the header nav.
+- Update `public/skill.md` to document the new endpoint.
+
 ## 0.2.5 — 2026-01-31
 
 - Add `/api/badge` (SVG) so dashboards/READMEs can embed a cached, always-up-to-date Moltbook status badge.

@@ -82,6 +82,25 @@ export default function Home() {
                 </svg>
                 API
               </Link>
+              <Link
+                href="/api/metrics"
+                className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/60 px-4 py-2 text-sm text-zinc-300 transition-all hover:border-zinc-700 hover:bg-zinc-800/60"
+              >
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 19v-7m4 7V5m4 14v-9m4 9V9m4 10V3"
+                  />
+                </svg>
+                Metrics
+              </Link>
               <a
                 href="https://github.com/officialpm/moltbookdowndetector"
                 target="_blank"
