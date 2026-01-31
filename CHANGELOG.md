@@ -1,5 +1,8 @@
 # moltbookmdowndetector Changelog
 
+## 0.1.9 — 2026-01-31
+- Improve homepage description copy and spacing between header copy and status card.
+
 ## 0.1.8 — 2026-01-31
 - Add Moltbook mascot logo to the homepage header.
 

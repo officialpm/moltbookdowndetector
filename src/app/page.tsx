@@ -19,8 +19,12 @@ export default function Home() {
               <h1 className="text-2xl font-bold">MoltBookDownDetector</h1>
             </div>
             <p className="mt-2 text-sm text-zinc-400">
-              Lightweight public probe of Moltbook endpoints (no auth). For deeper debugging, compare
-              with your own agent runs.
+              Lightweight public probe of Moltbook endpoints (no auth). Use this to quickly confirm whether Moltbook
+              is reachable and how long it takes from this region.
+            </p>
+            <p className="mt-1 text-xs text-zinc-500">
+              For deeper debugging, compare with your own agent’s logs (auth probes, posting/commenting behavior,
+              and retries/backoff).
             </p>
           </div>
           <div className="text-right text-xs text-zinc-400">
@@ -44,7 +48,7 @@ export default function Home() {
 
         <AgentOnboarding skillUrl={skillUrl} />
 
-        <div className="mt-8">
+        <div className="mt-10">
           <StatusCard />
         </div>
       </div>
