@@ -9,6 +9,7 @@ import StatusHistory, { useStatusHistory } from "./components/StatusHistory";
 type CheckResult = {
   name: string;
   url: string;
+  category: "site" | "api" | "docs" | "auth";
   status: number;
   ok: boolean;
   ms: number;
@@ -31,6 +32,129 @@ async function fetchStatus(): Promise<CheckResponse> {
   const res = await fetch("/api/check", { cache: "no-store" });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return (await res.json()) as CheckResponse;
+}
+
+const categoryConfig = {
+  site: {
+    label: "🌐 Core Site",
+    description: "Main website availability",
+  },
+  api: {
+    label: "📡 Public API",
+    description: "Publicly accessible endpoints",
+  },
+  docs: {
+    label: "📚 Agent Docs",
+    description: "MCP skill documentation files",
+  },
+  auth: {
+    label: "🔐 Authenticated",
+    description: "Requires API key",
+  },
+};
+
+function EndpointCard({ r }: { r: CheckResult }) {
+  return (
+    <div
+      className={`group relative overflow-hidden rounded-xl border transition-all duration-300 hover:scale-[1.01] ${
+        r.ok
+          ? "border-zinc-800 bg-zinc-900/40 hover:border-emerald-500/30 hover:bg-zinc-900/60"
+          : "border-red-500/30 bg-red-950/20 hover:border-red-500/50"
+      }`}
+    >
+      <div className="flex items-center justify-between gap-4 px-4 py-3 flex-wrap">
+        <div className="flex items-center gap-3 min-w-0">
+          <StatusDot
+            status={r.ok ? "operational" : "degraded"}
+            size="sm"
+            pulse={false}
+          />
+          <div className="min-w-0">
+            <div className="text-sm font-semibold truncate">{r.name}</div>
+            <div className="mt-0.5 text-xs text-zinc-500 truncate max-w-[200px]">
+              {new URL(r.url).pathname}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-4 shrink-0">
+          <LatencyBar ms={r.ms} />
+          <div className="text-right min-w-[60px]">
+            <div
+              className={`text-xs font-bold ${
+                r.ok ? "text-emerald-400" : "text-red-400"
+              }`}
+            >
+              {r.ok ? "OK" : "FAIL"}
+            </div>
+            <div className="text-[10px] text-zinc-500">
+              {r.status || r.error || "Err"}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        className={`absolute inset-0 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none ${
+          r.ok
+            ? "bg-gradient-to-r from-emerald-500/5 to-transparent"
+            : "bg-gradient-to-r from-red-500/5 to-transparent"
+        }`}
+      />
+    </div>
+  );
+}
+
+function EndpointGrid({ results }: { results: CheckResult[] }) {
+  const grouped = useMemo(() => {
+    const groups: Record<string, CheckResult[]> = {};
+    for (const r of results) {
+      const cat = r.category || "api";
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(r);
+    }
+    return groups;
+  }, [results]);
+
+  const categoryOrder: Array<"site" | "api" | "docs" | "auth"> = ["site", "api", "docs", "auth"];
+
+  if (!results.length) return null;
+
+  return (
+    <div className="space-y-6">
+      {categoryOrder.map((cat) => {
+        const items = grouped[cat];
+        if (!items?.length) return null;
+        const config = categoryConfig[cat];
+        const allOk = items.every((r) => r.ok);
+
+        return (
+          <div key={cat} className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-medium text-zinc-300 flex items-center gap-2">
+                  {config.label}
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                      allOk
+                        ? "bg-emerald-500/10 text-emerald-400"
+                        : "bg-red-500/10 text-red-400"
+                    }`}
+                  >
+                    {items.filter((r) => r.ok).length}/{items.length}
+                  </span>
+                </h3>
+                <p className="text-xs text-zinc-500">{config.description}</p>
+              </div>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {items.map((r) => (
+                <EndpointCard key={r.name} r={r} />
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 export default function StatusCard() {
@@ -141,100 +265,32 @@ export default function StatusCard() {
       </div>
 
       {/* Individual Endpoint Cards */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium text-zinc-400 flex items-center gap-2">
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-            />
-          </svg>
-          Endpoint Status
-        </h3>
+      <EndpointGrid results={view.results} />
 
-        {view.results.map((r) => (
-          <div
-            key={r.name}
-            className={`group relative overflow-hidden rounded-xl border transition-all duration-300 hover:scale-[1.01] ${
-              r.ok
-                ? "border-zinc-800 bg-zinc-900/40 hover:border-emerald-500/30 hover:bg-zinc-900/60"
-                : "border-red-500/30 bg-red-950/20 hover:border-red-500/50"
-            }`}
-          >
-            <div className="flex items-center justify-between gap-4 px-5 py-4 flex-wrap">
-              <div className="flex items-center gap-4 min-w-0">
-                <StatusDot
-                  status={r.ok ? "operational" : "degraded"}
-                  size="sm"
-                  pulse={false}
-                />
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold truncate">{r.name}</div>
-                  <div className="mt-1 text-xs text-zinc-500 truncate max-w-md">
-                    {r.url}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-6 shrink-0 flex-wrap">
-                <LatencyBar ms={r.ms} />
-                <div className="text-right min-w-[80px]">
-                  <div
-                    className={`text-sm font-bold ${
-                      r.ok ? "text-emerald-400" : "text-red-400"
-                    }`}
-                  >
-                    {r.ok ? "Healthy" : "Unhealthy"}
-                  </div>
-                  <div className="mt-0.5 text-xs text-zinc-500">
-                    {r.status ? `${r.status}` : r.error || "Error"} · {r.ms}ms
-                  </div>
+      {state.kind === "ok" && !view.results.length && (
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 px-5 py-8 text-center">
+          <div className="text-zinc-500">No endpoints configured</div>
+        </div>
+      )}
+
+      {state.kind === "loading" && (
+        <div className="space-y-3">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="animate-pulse rounded-xl border border-zinc-800 bg-zinc-900/40 px-5 py-4"
+            >
+              <div className="flex items-center gap-4">
+                <div className="h-3 w-3 rounded-full bg-zinc-700" />
+                <div className="space-y-2 flex-1">
+                  <div className="h-4 w-32 rounded bg-zinc-700" />
+                  <div className="h-3 w-48 rounded bg-zinc-800" />
                 </div>
               </div>
             </div>
-
-            {/* Subtle gradient overlay on hover */}
-            <div
-              className={`absolute inset-0 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none ${
-                r.ok
-                  ? "bg-gradient-to-r from-emerald-500/5 to-transparent"
-                  : "bg-gradient-to-r from-red-500/5 to-transparent"
-              }`}
-            />
-          </div>
-        ))}
-
-        {state.kind === "ok" && !view.results.length && (
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 px-5 py-8 text-center">
-            <div className="text-zinc-500">No endpoints configured</div>
-          </div>
-        )}
-
-        {state.kind === "loading" && (
-          <div className="space-y-3">
-            {[1, 2].map((i) => (
-              <div
-                key={i}
-                className="animate-pulse rounded-xl border border-zinc-800 bg-zinc-900/40 px-5 py-4"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="h-3 w-3 rounded-full bg-zinc-700" />
-                  <div className="space-y-2 flex-1">
-                    <div className="h-4 w-32 rounded bg-zinc-700" />
-                    <div className="h-3 w-48 rounded bg-zinc-800" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Info Footer */}
       <div className="flex items-center justify-between text-xs text-zinc-500 pt-2 flex-wrap gap-2">

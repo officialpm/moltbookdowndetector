@@ -1,16 +1,35 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 type RefreshButtonProps = {
   onClick: () => void;
   loading: boolean;
   lastRefresh?: Date;
 };
 
+function formatTimeAgo(date: Date): string {
+  const seconds = Math.round((Date.now() - date.getTime()) / 1000);
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  return `${Math.floor(minutes / 60)}h ago`;
+}
+
 export default function RefreshButton({
   onClick,
   loading,
   lastRefresh,
 }: RefreshButtonProps) {
+  const [, setTick] = useState(0);
+
+  // Update the "time ago" display every 5 seconds
+  useEffect(() => {
+    if (!lastRefresh) return;
+    const id = setInterval(() => setTick((t) => t + 1), 5000);
+    return () => clearInterval(id);
+  }, [lastRefresh]);
+
   return (
     <button
       onClick={onClick}
@@ -32,9 +51,7 @@ export default function RefreshButton({
       </svg>
       <span>{loading ? "Checking..." : "Refresh"}</span>
       {lastRefresh && !loading && (
-        <span className="text-zinc-500">
-          {Math.round((Date.now() - lastRefresh.getTime()) / 1000)}s ago
-        </span>
+        <span className="text-zinc-500">{formatTimeAgo(lastRefresh)}</span>
       )}
     </button>
   );

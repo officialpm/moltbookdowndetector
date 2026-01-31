@@ -9,6 +9,7 @@ export const revalidate = 300;
 type CheckResult = {
   name: string;
   url: string;
+  category: "site" | "api" | "docs" | "auth";
   status: number;
   ok: boolean;
   ms: number;
@@ -20,20 +21,105 @@ type CheckTarget = {
   url: string;
   method?: "GET" | "HEAD";
   timeoutMs: number;
+  category: "site" | "api" | "docs" | "auth";
 };
 
-const targets: CheckTarget[] = [
+// ============================================
+// PUBLIC ENDPOINTS (no auth required)
+// ============================================
+const publicTargets: CheckTarget[] = [
+  // 🌐 Core Site
   {
-    name: "moltbook: posts new",
-    url: "https://www.moltbook.com/api/v1/posts?sort=new&limit=1",
-    method: "GET",
-    timeoutMs: 5000,
-  },
-  {
-    name: "moltbook: site",
+    name: "Homepage",
     url: "https://www.moltbook.com/",
     method: "HEAD",
     timeoutMs: 5000,
+    category: "site",
+  },
+
+  // 📡 Public API
+  {
+    name: "Posts Feed",
+    url: "https://www.moltbook.com/api/v1/posts?sort=new&limit=1",
+    method: "GET",
+    timeoutMs: 5000,
+    category: "api",
+  },
+  {
+    name: "Submolts List",
+    url: "https://www.moltbook.com/api/v1/submolts",
+    method: "GET",
+    timeoutMs: 5000,
+    category: "api",
+  },
+
+  // 📚 Agent Documentation
+  {
+    name: "skill.md",
+    url: "https://www.moltbook.com/skill.md",
+    method: "HEAD",
+    timeoutMs: 5000,
+    category: "docs",
+  },
+  {
+    name: "heartbeat.md",
+    url: "https://www.moltbook.com/heartbeat.md",
+    method: "HEAD",
+    timeoutMs: 5000,
+    category: "docs",
+  },
+  {
+    name: "messaging.md",
+    url: "https://www.moltbook.com/messaging.md",
+    method: "HEAD",
+    timeoutMs: 5000,
+    category: "docs",
+  },
+  {
+    name: "skill.json",
+    url: "https://www.moltbook.com/skill.json",
+    method: "HEAD",
+    timeoutMs: 5000,
+    category: "docs",
+  },
+];
+
+// ============================================
+// AUTHENTICATED ENDPOINTS (requires MOLTBOOK_API_KEY)
+// ============================================
+const authTargets: CheckTarget[] = [
+  // 👤 Agent Identity
+  {
+    name: "Profile (me)",
+    url: "https://www.moltbook.com/api/v1/agents/me",
+    method: "GET",
+    timeoutMs: 5000,
+    category: "auth",
+  },
+  {
+    name: "Claim Status",
+    url: "https://www.moltbook.com/api/v1/agents/status",
+    method: "GET",
+    timeoutMs: 5000,
+    category: "auth",
+  },
+
+  // 📰 Personalized Content
+  {
+    name: "Personal Feed",
+    url: "https://www.moltbook.com/api/v1/feed?limit=1",
+    method: "GET",
+    timeoutMs: 5000,
+    category: "auth",
+  },
+
+  // 🔍 Search API
+  {
+    name: "Semantic Search",
+    url: "https://www.moltbook.com/api/v1/search?q=test&limit=1",
+    method: "GET",
+    timeoutMs: 5000,
+    category: "auth",
   },
 ];
 
@@ -63,19 +149,10 @@ async function performProbe(): Promise<{
   const startedAt = Date.now();
   const auth = moltbookAuthHeader();
 
-  const allTargets: (CheckTarget & { auth?: boolean })[] = [
-    ...targets.map((t) => ({ ...t, auth: false })),
-    ...(auth
-      ? [
-          {
-            name: "moltbook: agents/me (auth)",
-            url: "https://www.moltbook.com/api/v1/agents/me",
-            method: "GET" as const,
-            timeoutMs: 5000,
-            auth: true,
-          },
-        ]
-      : []),
+  // Combine public and auth targets
+  const allTargets: (CheckTarget & { requiresAuth?: boolean })[] = [
+    ...publicTargets.map((t) => ({ ...t, requiresAuth: false })),
+    ...(auth ? authTargets.map((t) => ({ ...t, requiresAuth: true })) : []),
   ];
 
   const results = await Promise.all(
@@ -88,7 +165,7 @@ async function performProbe(): Promise<{
             method: t.method ?? "GET",
             headers: {
               "user-agent": "moltbookdowndetector/0.2.0 (+https://github.com/officialpm/moltbookdowndetector)",
-              ...(t.auth && auth ? auth : {}),
+              ...(t.requiresAuth && auth ? auth : {}),
             },
             redirect: "follow",
             cache: "no-store",
@@ -102,6 +179,7 @@ async function performProbe(): Promise<{
         return {
           name: t.name,
           url: t.url,
+          category: t.category,
           status: res.status,
           ok,
           ms,
@@ -115,6 +193,7 @@ async function performProbe(): Promise<{
         return {
           name: t.name,
           url: t.url,
+          category: t.category,
           status: 0,
           ok: false,
           ms,
