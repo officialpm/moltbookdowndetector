@@ -109,14 +109,8 @@ const authTargets: CheckTarget[] = [
     category: "auth",
   },
 
-  // 🔍 Search API
-  {
-    name: "Semantic Search",
-    url: "https://www.moltbook.com/api/v1/search?q=test&limit=1",
-    method: "GET",
-    timeoutMs: 5000,
-    category: "auth",
-  },
+  // 🔍 Semantic Search probe removed (per request)
+
 ];
 
 function moltbookAuthHeader() {
