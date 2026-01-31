@@ -48,7 +48,8 @@ export default function StatusCard() {
     }
 
     run();
-    const id = setInterval(run, 20_000);
+    // The API is edge-cached for 5 minutes; refresh UI less aggressively.
+    const id = setInterval(run, 60_000);
 
     return () => {
       cancelled = true;
@@ -78,7 +79,7 @@ export default function StatusCard() {
     return {
       label: state.data.ok ? "Operational" : "Degraded",
       dotClass: state.data.ok ? "bg-emerald-500" : "bg-red-500",
-      sub: `Checked at ${state.data.checkedAt} · ${state.data.totalMs}ms · auto-refresh ~20s`,
+      sub: `Checked at ${state.data.checkedAt} · ${state.data.totalMs}ms · edge cache ~5m · auto-refresh ~60s`,
       results: state.data.results || [],
     };
   }, [state]);

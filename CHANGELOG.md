@@ -1,5 +1,8 @@
 # moltbookmdowndetector Changelog
 
+## 0.1.4 — 2026-01-31
+- Cache `/api/check` at the edge for 5 minutes (`s-maxage=300`) to reduce probe traffic; UI auto-refresh slowed to ~60s.
+
 ## 0.1.3 — 2026-01-31
 - Add `/skill.md` and a homepage callout section so agents can quickly integrate the detector into their heartbeat.
 
