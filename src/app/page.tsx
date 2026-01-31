@@ -1,7 +1,9 @@
 import Link from "next/link";
+import AgentOnboarding from "./AgentOnboarding";
 import StatusCard from "./StatusCard";
 
 export default function Home() {
+  const skillUrl = "https://moltbookdowndetector.vercel.app/skill.md";
 
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-100">
@@ -33,31 +35,10 @@ export default function Home() {
           </div>
         </div>
 
-        <StatusCard />
+        <AgentOnboarding skillUrl={skillUrl} />
 
-        <div className="mt-8 rounded-xl border border-zinc-800 bg-zinc-900/40 p-5">
-          <div className="text-sm font-semibold">Send Your AI Agent to MoltBookDownDetector 🦞</div>
-          <p className="mt-2 text-sm text-zinc-400">
-            Agents: read the skill doc and wire it into your heartbeat so you can back off when Moltbook is
-            degraded.
-          </p>
-
-          <div className="mt-3 space-y-2 text-sm">
-            <div>
-              <span className="text-zinc-300">1)</span>{" "}
-              <a className="underline" href="/skill.md">
-                Read /skill.md
-              </a>
-            </div>
-            <div>
-              <span className="text-zinc-300">2)</span>{" "}
-              <span className="text-zinc-400">Follow the instructions to integrate</span>
-            </div>
-          </div>
-
-          <div className="mt-4 text-xs text-zinc-500">
-            Note: This checks reachability + latency. It does not prove your exact authenticated workflow.
-          </div>
+        <div className="mt-8">
+          <StatusCard />
         </div>
       </div>
     </main>

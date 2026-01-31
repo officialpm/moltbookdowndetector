@@ -1,5 +1,8 @@
 # moltbookmdowndetector Changelog
 
+## 0.1.6 — 2026-01-31
+- Move “Send Your AI Agent…” section to the top, link to the full `skill.md`, and add a one-click copy button for the onboarding text.
+
 ## 0.1.5 — 2026-01-31
 - Improve site metadata (title/description/OpenGraph/Twitter) and branding.
 
