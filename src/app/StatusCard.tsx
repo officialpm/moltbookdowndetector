@@ -1,6 +1,10 @@
 "use client";
 
-import StatusHistory, { useStatusHistory } from "./components/StatusHistory";
+import StatusHistory, {
+  type HistoryEntry,
+  type HistoryProbeResult,
+  useStatusHistory,
+} from "./components/StatusHistory";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import LatencyBar from "./components/LatencyBar";
@@ -54,7 +58,50 @@ const categoryConfig = {
   },
 };
 
-function EndpointCard({ r }: { r: CheckResult }) {
+type EndpointStats = {
+  n: number;
+  fail: number;
+  avgMs: number;
+  lastFailAt?: string;
+};
+
+function computeEndpointStats(history: HistoryEntry[]): Map<string, EndpointStats> {
+  const m = new Map<string, { n: number; fail: number; msSum: number; lastFailAt?: string }>();
+
+  for (const entry of history) {
+    for (const r of entry.results || []) {
+      const prev = m.get(r.name) || { n: 0, fail: 0, msSum: 0 };
+      const next = {
+        n: prev.n + 1,
+        fail: prev.fail + (r.ok ? 0 : 1),
+        msSum: prev.msSum + (Number.isFinite(r.ms) ? r.ms : 0),
+        lastFailAt: !r.ok ? entry.timestamp : prev.lastFailAt,
+      };
+      m.set(r.name, next);
+    }
+  }
+
+  const out = new Map<string, EndpointStats>();
+  for (const [name, v] of m.entries()) {
+    out.set(name, {
+      n: v.n,
+      fail: v.fail,
+      avgMs: v.n ? Math.round(v.msSum / v.n) : 0,
+      lastFailAt: v.lastFailAt,
+    });
+  }
+  return out;
+}
+
+function EndpointCard({
+  r,
+  stats,
+}: {
+  r: CheckResult;
+  stats?: EndpointStats;
+}) {
+  const failPct = stats && stats.n ? Math.round((stats.fail / stats.n) * 100) : undefined;
+
   return (
     <div
       className={`group relative overflow-hidden rounded-xl border transition-all duration-300 hover:scale-[1.01] ${
@@ -75,6 +122,17 @@ function EndpointCard({ r }: { r: CheckResult }) {
             <div className="mt-0.5 text-xs text-zinc-500 truncate max-w-[200px]">
               {new URL(r.url).pathname}
             </div>
+            {stats && stats.n > 0 && (
+              <div className="mt-1 text-[11px] text-zinc-500">
+                Recent: {failPct}% fail (n={stats.n}) · avg {stats.avgMs}ms
+                {stats.lastFailAt ? (
+                  <span className="text-zinc-600">
+                    {" "}
+                    · last fail {new Date(stats.lastFailAt).toLocaleTimeString()}
+                  </span>
+                ) : null}
+              </div>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-4 shrink-0">
@@ -104,7 +162,13 @@ function EndpointCard({ r }: { r: CheckResult }) {
   );
 }
 
-function EndpointGrid({ results }: { results: CheckResult[] }) {
+function EndpointGrid({
+  results,
+  history,
+}: {
+  results: CheckResult[];
+  history: HistoryEntry[];
+}) {
   const grouped = useMemo(() => {
     const groups: Record<string, CheckResult[]> = {};
     for (const r of results) {
@@ -114,6 +178,8 @@ function EndpointGrid({ results }: { results: CheckResult[] }) {
     }
     return groups;
   }, [results]);
+
+  const endpointStats = useMemo(() => computeEndpointStats(history), [history]);
 
   const categoryOrder: Array<"site" | "api" | "docs" | "auth"> = [
     "site",
@@ -153,7 +219,7 @@ function EndpointGrid({ results }: { results: CheckResult[] }) {
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
               {items.map((r) => (
-                <EndpointCard key={r.name} r={r} />
+                <EndpointCard key={r.name} r={r} stats={endpointStats.get(r.name)} />
               ))}
             </div>
           </div>
@@ -167,7 +233,7 @@ export default function StatusCard() {
   const [state, setState] = useState<LoadState>({ kind: "loading" });
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date | undefined>();
-  const { history, addEntry } = useStatusHistory();
+  const { history, addEntry, maxEntries } = useStatusHistory();
 
   const doFetch = useCallback(async () => {
     setIsRefreshing(true);
@@ -175,10 +241,18 @@ export default function StatusCard() {
       const data = await fetchStatus();
       setState({ kind: "ok", data });
       setLastRefresh(new Date());
+
+      const compactResults: HistoryProbeResult[] = (data.results || []).map((r) => ({
+        name: r.name,
+        ok: r.ok,
+        ms: r.ms,
+      }));
+
       addEntry({
         timestamp: data.checkedAt,
         ok: data.ok,
         totalMs: data.totalMs,
+        results: compactResults,
       });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Failed to fetch";
@@ -267,11 +341,11 @@ export default function StatusCard() {
           />
         </div>
 
-        <StatusHistory history={history} />
+        <StatusHistory history={history} maxEntries={maxEntries} />
       </div>
 
       {/* Individual Endpoint Cards */}
-      <EndpointGrid results={view.results} />
+      <EndpointGrid results={view.results} history={history} />
 
       {state.kind === "ok" && !view.results.length && (
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 px-5 py-8 text-center">

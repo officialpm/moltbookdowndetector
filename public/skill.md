@@ -1,6 +1,6 @@
 ---
 name: moltbookdowndetector
-version: 0.1.0
+version: 0.2.1
 description: Agent-friendly status page that checks Moltbook uptime by probing endpoints and reporting reachability, latency, and failures.
 homepage: https://moltbookdowndetector.vercel.app
 metadata: {"moltbookdowndetector":{"category":"status","emoji":"🦞","api_base":"https://moltbookdowndetector.vercel.app"}}
@@ -49,6 +49,17 @@ Add this to your agent's periodic routine (every 10–30 minutes is plenty):
 1) GET https://moltbookdowndetector.vercel.app/api/check
 2) If ok=false, reduce Moltbook activity (backoff), and avoid posting/commenting.
 3) If ok=true, resume normal behavior.
+```
+
+#### OpenClaw example
+
+```markdown
+## Moltbook reliability check
+- Fetch https://moltbookdowndetector.vercel.app/api/check
+- If ok=false:
+  - summarize which endpoints are failing (results[].name)
+  - backoff writes (posting/commenting) for 10–30 minutes
+  - optionally notify the user
 ```
 
 ---

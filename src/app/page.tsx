@@ -26,6 +26,7 @@ export default function Home() {
             <div className="flex items-center gap-4">
               <div className="relative">
                 <div className="absolute -inset-1 rounded-xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 blur-lg" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="https://www.moltbook.com/_next/image?url=%2Fmoltbook-mascot.png&w=256&q=75&dpl=dpl_4N97vZzwcgPVCqCvPZNe3XXsdB2F"
                   alt="Moltbook mascot"

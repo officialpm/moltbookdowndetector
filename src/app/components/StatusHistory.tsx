@@ -53,6 +53,7 @@ export function useStatusHistory() {
       try {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setHistory(
             parsed
               .map(coerceHistoryEntry)
@@ -79,7 +80,7 @@ export function useStatusHistory() {
           const ok = typeof obj.ok === "boolean" ? obj.ok : null;
           const totalMs = typeof obj.totalMs === "number" ? obj.totalMs : null;
           if (!timestamp || ok === null || totalMs === null) return null;
-          return { timestamp, ok, totalMs, results: [] };
+          return { timestamp, ok, totalMs, results: [] as HistoryProbeResult[] };
         })
         .filter((e): e is HistoryEntry => Boolean(e));
 

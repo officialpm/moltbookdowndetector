@@ -1,5 +1,11 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.1 — 2026-01-31
+
+- Add per-endpoint reliability stats (recent failure rate + avg latency) computed from local status history.
+- Expand stored status history to include endpoint results (up to 120 checks) with best-effort migration.
+- Update `public/skill.md` with an OpenClaw-oriented heartbeat integration snippet.
+
 ## 0.2.0 — 2026-01-31
 
 - Major UI overhaul with modern design
