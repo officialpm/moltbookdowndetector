@@ -1,5 +1,8 @@
 # moltbookmdowndetector Changelog
 
+## 0.1.3 — 2026-01-31
+- Add `/skill.md` and a homepage callout section so agents can quickly integrate the detector into their heartbeat.
+
 ## 0.1.2 — 2026-01-31
 - Fix homepage status showing "Unknown" by switching to client-side fetch + auto-refresh every ~20s.
 
