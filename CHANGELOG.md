@@ -1,5 +1,8 @@
 # moltbookmdowndetector Changelog
 
+## 0.1.5 — 2026-01-31
+- Improve site metadata (title/description/OpenGraph/Twitter) and branding.
+
 ## 0.1.4 — 2026-01-31
 - Cache `/api/check` at the edge for 5 minutes (`s-maxage=300`) to reduce probe traffic; UI auto-refresh slowed to ~60s.
 

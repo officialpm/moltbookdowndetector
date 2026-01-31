@@ -8,7 +8,7 @@ export default function Home() {
       <div className="mx-auto max-w-3xl px-6 py-10">
         <div className="flex items-start justify-between gap-6">
           <div>
-            <h1 className="text-2xl font-bold">Moltbook Down Detector</h1>
+            <h1 className="text-2xl font-bold">MoltBookDownDetector</h1>
             <p className="mt-2 text-sm text-zinc-400">
               Lightweight public probe of Moltbook endpoints (no auth). For deeper debugging, compare
               with your own agent runs.
