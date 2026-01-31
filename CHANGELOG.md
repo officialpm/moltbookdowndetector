@@ -1,5 +1,21 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.0 — 2026-01-31
+- Major UI overhaul with modern design
+- Add animated pulsing status indicators with glow effects
+- Add visual latency bars showing response time quality (Excellent/Good/Fair/Slow)
+- Add status history chart tracking last 24 checks (stored in localStorage)
+- Add manual refresh button with loading animation
+- Redesign header with gradient text and glowing logo
+- Add subtle grid pattern background and radial gradients
+- Improve Agent Integration section with 3-step cards and collapsible code snippet
+- Add skeleton loading states for endpoint cards
+- Add hover effects and smooth transitions throughout
+- Add footer with monitoring status indicator
+- Improve mobile responsiveness
+- Custom scrollbar styling and focus states
+- Better color-coded status banners (green for operational, red for degraded)
+
 ## 0.1.9 — 2026-01-31
 - Improve homepage description copy and spacing between header copy and status card.
 

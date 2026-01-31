@@ -9,6 +9,7 @@ function normalizeText(s: string) {
 export default function AgentOnboarding(props: { skillUrl: string }) {
   const { skillUrl } = props;
   const [copied, setCopied] = useState(false);
+  const [showCode, setShowCode] = useState(false);
 
   const snippet = useMemo(() => {
     return normalizeText(`Send Your AI Agent to MoltBookDownDetector 🦞
@@ -20,9 +21,11 @@ Quick check:
 `);
   }, [skillUrl]);
 
-  async function copy() {
+  const curlCommand = `curl -s ${new URL("/api/check", skillUrl).toString()} | jq .`;
+
+  async function copy(text: string) {
     try {
-      await navigator.clipboard.writeText(snippet);
+      await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 1200);
     } catch {
@@ -31,32 +34,115 @@ Quick check:
   }
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-5">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="text-sm font-semibold">Send Your AI Agent to MoltBookDownDetector 🦞</div>
-          <p className="mt-2 text-sm text-zinc-400">
-            Agents: read the full skill doc and wire it into your heartbeat so you can back off when Moltbook is
-            degraded.
-          </p>
+    <div className="relative overflow-hidden rounded-2xl border border-zinc-800 bg-gradient-to-br from-zinc-900/80 via-zinc-900/60 to-zinc-900/40 backdrop-blur-sm">
+      {/* Decorative gradient */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-amber-500/5 via-orange-500/5 to-transparent rounded-full blur-3xl" />
+      
+      <div className="relative p-6">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 text-xl">
+              🤖
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight">Agent Integration</h2>
+              <p className="text-sm text-zinc-500">Wire this into your agent&apos;s heartbeat</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowCode(!showCode)}
+              className="flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900/60 px-3 py-2 text-xs text-zinc-300 transition-all hover:border-zinc-600 hover:bg-zinc-800/60"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
+              {showCode ? "Hide" : "Show"} Code
+            </button>
+            <button
+              onClick={() => copy(snippet)}
+              className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-400 transition-all hover:border-emerald-500/50 hover:bg-emerald-500/20"
+            >
+              {copied ? (
+                <>
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Copy
+                </>
+              )}
+            </button>
+          </div>
         </div>
-        <button
-          onClick={copy}
-          className="shrink-0 rounded-lg border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-xs text-zinc-200 hover:bg-zinc-950"
-        >
-          {copied ? "Copied" : "Copy text"}
-        </button>
-      </div>
 
-      <div className="mt-4 space-y-2 text-sm">
-        <div>
-          <span className="text-zinc-300">Skill:</span>{" "}
-          <a className="underline" href={skillUrl} target="_blank" rel="noreferrer">
-            {skillUrl}
-          </a>
+        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4 transition-all hover:border-zinc-700">
+            <div className="flex items-center gap-2 text-sm font-medium text-zinc-300">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-800 text-xs">1</span>
+              Read Skill Doc
+            </div>
+            <p className="mt-2 text-xs text-zinc-500">
+              Fetch the skill.md to understand the integration
+            </p>
+          </div>
+          <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4 transition-all hover:border-zinc-700">
+            <div className="flex items-center gap-2 text-sm font-medium text-zinc-300">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-800 text-xs">2</span>
+              Check Status
+            </div>
+            <p className="mt-2 text-xs text-zinc-500">
+              Call /api/check every 10-30 minutes
+            </p>
+          </div>
+          <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4 transition-all hover:border-zinc-700">
+            <div className="flex items-center gap-2 text-sm font-medium text-zinc-300">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-800 text-xs">3</span>
+              Backoff if Down
+            </div>
+            <p className="mt-2 text-xs text-zinc-500">
+              Reduce activity when ok=false
+            </p>
+          </div>
         </div>
-        <div className="text-xs text-zinc-500">
-          Tip: paste the copied text into your agent instructions or a heartbeat/cron.
+
+        {showCode && (
+          <div className="mt-4 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/60">
+            <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-2">
+              <span className="text-xs text-zinc-500">Quick test</span>
+              <button
+                onClick={() => copy(curlCommand)}
+                className="text-xs text-zinc-400 hover:text-zinc-300"
+              >
+                Copy
+              </button>
+            </div>
+            <pre className="overflow-x-auto p-4 text-sm text-emerald-400">
+              <code>{curlCommand}</code>
+            </pre>
+          </div>
+        )}
+
+        <div className="mt-4 flex items-center gap-4 text-xs">
+          <a
+            className="flex items-center gap-1 text-zinc-400 transition-colors hover:text-zinc-300"
+            href={skillUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            skill.md
+          </a>
+          <span className="text-zinc-600">·</span>
+          <span className="text-zinc-500">Tip: paste the copied text into your agent instructions</span>
         </div>
       </div>
     </div>
