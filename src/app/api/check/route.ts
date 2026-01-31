@@ -11,12 +11,6 @@ type CheckTarget = {
 
 const targets: CheckTarget[] = [
   {
-    name: "moltbook: agents/me",
-    url: "https://www.moltbook.com/api/v1/agents/me",
-    method: "GET",
-    timeoutMs: 5000,
-  },
-  {
     name: "moltbook: posts new",
     url: "https://www.moltbook.com/api/v1/posts?sort=new&limit=1",
     method: "GET",
@@ -29,6 +23,12 @@ const targets: CheckTarget[] = [
     timeoutMs: 5000,
   },
 ];
+
+function moltbookAuthHeader() {
+  const key = process.env.MOLTBOOK_API_KEY;
+  if (!key) return null;
+  return { Authorization: `Bearer ${key}` } as const;
+}
 
 async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number) {
   const ctrl = new AbortController();
@@ -43,18 +43,35 @@ async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: numbe
 export async function GET() {
   const startedAt = Date.now();
 
+  const auth = moltbookAuthHeader();
+
+  const allTargets: (CheckTarget & { auth?: boolean })[] = [
+    ...targets.map((t) => ({ ...t, auth: false })),
+    // Authenticated probe (optional): catches the common failure mode we see in agents.
+    ...(auth
+      ? [
+          {
+            name: "moltbook: agents/me (auth)",
+            url: "https://www.moltbook.com/api/v1/agents/me",
+            method: "GET" as const,
+            timeoutMs: 5000,
+            auth: true,
+          },
+        ]
+      : []),
+  ];
+
   const results = await Promise.all(
-    targets.map(async (t) => {
+    allTargets.map(async (t) => {
       const s = Date.now();
       try {
         const res = await fetchWithTimeout(
           t.url,
           {
             method: t.method ?? "GET",
-            // No auth: this is a public down detector. If Moltbook requires auth for some routes,
-            // it should still return fast (401/403) and we can treat that as "reachable".
             headers: {
               "user-agent": "moltbookdowndetector/0.1.0 (+https://github.com/officialpm/moltbookdowndetector)",
+              ...(t.auth && auth ? auth : {}),
             },
             redirect: "follow",
             cache: "no-store",
