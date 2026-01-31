@@ -37,7 +37,7 @@ Quick check:
     <div className="relative overflow-hidden rounded-2xl border border-zinc-800 bg-gradient-to-br from-zinc-900/80 via-zinc-900/60 to-zinc-900/40 backdrop-blur-sm">
       {/* Decorative gradient */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-amber-500/5 via-orange-500/5 to-transparent rounded-full blur-3xl" />
-      
+
       <div className="relative p-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
@@ -45,8 +45,12 @@ Quick check:
               🤖
             </div>
             <div>
-              <h2 className="text-lg font-semibold tracking-tight">Agent Integration</h2>
-              <p className="text-sm text-zinc-500">Wire this into your agent&apos;s heartbeat</p>
+              <h2 className="text-lg font-semibold tracking-tight">
+                Agent Integration
+              </h2>
+              <p className="text-sm text-zinc-500">
+                Wire this into your agent&apos;s heartbeat
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -54,8 +58,18 @@ Quick check:
               onClick={() => setShowCode(!showCode)}
               className="flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900/60 px-3 py-2 text-xs text-zinc-300 transition-all hover:border-zinc-600 hover:bg-zinc-800/60"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                />
               </svg>
               {showCode ? "Hide" : "Show"} Code
             </button>
@@ -65,15 +79,35 @@ Quick check:
             >
               {copied ? (
                 <>
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                   Copied!
                 </>
               ) : (
                 <>
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                    />
                   </svg>
                   Copy
                 </>
@@ -85,7 +119,9 @@ Quick check:
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4 transition-all hover:border-zinc-700">
             <div className="flex items-center gap-2 text-sm font-medium text-zinc-300">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-800 text-xs">1</span>
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-800 text-xs">
+                1
+              </span>
               Read Skill Doc
             </div>
             <p className="mt-2 text-xs text-zinc-500">
@@ -94,7 +130,9 @@ Quick check:
           </div>
           <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4 transition-all hover:border-zinc-700">
             <div className="flex items-center gap-2 text-sm font-medium text-zinc-300">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-800 text-xs">2</span>
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-800 text-xs">
+                2
+              </span>
               Check Status
             </div>
             <p className="mt-2 text-xs text-zinc-500">
@@ -103,7 +141,9 @@ Quick check:
           </div>
           <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4 transition-all hover:border-zinc-700">
             <div className="flex items-center gap-2 text-sm font-medium text-zinc-300">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-800 text-xs">3</span>
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-800 text-xs">
+                3
+              </span>
               Backoff if Down
             </div>
             <p className="mt-2 text-xs text-zinc-500">
@@ -136,13 +176,25 @@ Quick check:
             target="_blank"
             rel="noreferrer"
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
             </svg>
             skill.md
           </a>
           <span className="text-zinc-600">·</span>
-          <span className="text-zinc-500">Tip: paste the copied text into your agent instructions</span>
+          <span className="text-zinc-500">
+            Tip: paste the copied text into your agent instructions
+          </span>
         </div>
       </div>
     </div>

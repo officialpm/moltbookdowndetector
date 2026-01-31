@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
-import StatusDot from "./components/StatusDot";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import LatencyBar from "./components/LatencyBar";
 import RefreshButton from "./components/RefreshButton";
+import StatusDot from "./components/StatusDot";
 import StatusHistory, { useStatusHistory } from "./components/StatusHistory";
 
 type CheckResult = {
@@ -103,8 +103,8 @@ export default function StatusCard() {
           view.status === "operational"
             ? "border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 via-zinc-900/60 to-zinc-900/40"
             : view.status === "degraded"
-            ? "border-red-500/30 bg-gradient-to-br from-red-950/40 via-zinc-900/60 to-zinc-900/40"
-            : "border-zinc-800 bg-zinc-900/40"
+              ? "border-red-500/30 bg-gradient-to-br from-red-950/40 via-zinc-900/60 to-zinc-900/40"
+              : "border-zinc-800 bg-zinc-900/40"
         }`}
       >
         {/* Glow effect */}
@@ -113,14 +113,18 @@ export default function StatusCard() {
             view.status === "operational"
               ? "bg-emerald-500/20"
               : view.status === "degraded"
-              ? "bg-red-500/20"
-              : "bg-zinc-500/10"
+                ? "bg-red-500/20"
+                : "bg-zinc-500/10"
           }`}
         />
 
         <div className="relative flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
-            <StatusDot status={view.status} size="lg" pulse={view.status !== "loading"} />
+            <StatusDot
+              status={view.status}
+              size="lg"
+              pulse={view.status !== "loading"}
+            />
             <div>
               <h2 className="text-xl font-bold tracking-tight">{view.label}</h2>
               <p className="mt-1 text-sm text-zinc-400">{view.sub}</p>
@@ -139,12 +143,22 @@ export default function StatusCard() {
       {/* Individual Endpoint Cards */}
       <div className="space-y-3">
         <h3 className="text-sm font-medium text-zinc-400 flex items-center gap-2">
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+            />
           </svg>
           Endpoint Status
         </h3>
-        
+
         {view.results.map((r) => (
           <div
             key={r.name}
@@ -156,7 +170,11 @@ export default function StatusCard() {
           >
             <div className="flex items-center justify-between gap-4 px-5 py-4 flex-wrap">
               <div className="flex items-center gap-4 min-w-0">
-                <StatusDot status={r.ok ? "operational" : "degraded"} size="sm" pulse={false} />
+                <StatusDot
+                  status={r.ok ? "operational" : "degraded"}
+                  size="sm"
+                  pulse={false}
+                />
                 <div className="min-w-0">
                   <div className="text-sm font-semibold truncate">{r.name}</div>
                   <div className="mt-1 text-xs text-zinc-500 truncate max-w-md">
@@ -180,7 +198,7 @@ export default function StatusCard() {
                 </div>
               </div>
             </div>
-            
+
             {/* Subtle gradient overlay on hover */}
             <div
               className={`absolute inset-0 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none ${

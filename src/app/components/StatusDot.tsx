@@ -26,7 +26,11 @@ const glowClasses = {
   loading: "shadow-zinc-500/50",
 };
 
-export default function StatusDot({ status, size = "md", pulse = true }: StatusDotProps) {
+export default function StatusDot({
+  status,
+  size = "md",
+  pulse = true,
+}: StatusDotProps) {
   return (
     <span className="relative inline-flex">
       {pulse && status !== "loading" && (

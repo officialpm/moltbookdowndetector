@@ -6,7 +6,11 @@ type RefreshButtonProps = {
   lastRefresh?: Date;
 };
 
-export default function RefreshButton({ onClick, loading, lastRefresh }: RefreshButtonProps) {
+export default function RefreshButton({
+  onClick,
+  loading,
+  lastRefresh,
+}: RefreshButtonProps) {
   return (
     <button
       onClick={onClick}
