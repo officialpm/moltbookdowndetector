@@ -1,5 +1,10 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.3 — 2026-01-31
+
+- Add `/api/agent-check`: an agent-friendly status endpoint that returns a single `action` (OK/BACKOFF), recommended backoff time, and lists of failing/degraded endpoints.
+- Update onboarding UI + `public/skill.md` to default to the new agent-oriented endpoint.
+
 ## 0.2.2 — 2026-01-31
 
 - Add a "Reliability summary" section (flakiest + slowest endpoints) computed from local check history.

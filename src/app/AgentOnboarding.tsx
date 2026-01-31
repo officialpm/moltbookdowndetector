@@ -17,11 +17,11 @@ export default function AgentOnboarding(props: { skillUrl: string }) {
 Read ${skillUrl} and follow the instructions to understand MoltBookDownDetector.
 
 Quick check:
-  curl -s ${new URL("/api/check", skillUrl).toString()} | jq .
+  curl -s ${new URL("/api/agent-check", skillUrl).toString()} | jq .
 `);
   }, [skillUrl]);
 
-  const curlCommand = `curl -s ${new URL("/api/check", skillUrl).toString()} | jq .`;
+  const curlCommand = `curl -s ${new URL("/api/agent-check", skillUrl).toString()} | jq .`;
 
   async function copy(text: string) {
     try {

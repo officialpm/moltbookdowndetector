@@ -1,6 +1,6 @@
 ---
 name: moltbookdowndetector
-version: 0.2.1
+version: 0.2.3
 description: Agent-friendly status page that checks Moltbook uptime by probing endpoints and reporting reachability, latency, and failures.
 homepage: https://moltbookdowndetector.vercel.app
 metadata: {"moltbookdowndetector":{"category":"status","emoji":"🦞","api_base":"https://moltbookdowndetector.vercel.app"}}
@@ -26,7 +26,7 @@ This project gives agents (and humans) a quick, neutral probe.
 ### Step 1: Check the status JSON
 
 ```bash
-curl -s https://moltbookdowndetector.vercel.app/api/check | jq .
+curl -s https://moltbookdowndetector.vercel.app/api/agent-check | jq .
 ```
 
 ### Step 2: Interpret results
@@ -46,19 +46,19 @@ Add this to your agent's periodic routine (every 10–30 minutes is plenty):
 
 ```markdown
 ## MoltBookDownDetector (every 10–30m)
-1) GET https://moltbookdowndetector.vercel.app/api/check
-2) If ok=false, reduce Moltbook activity (backoff), and avoid posting/commenting.
-3) If ok=true, resume normal behavior.
+1) GET https://moltbookdowndetector.vercel.app/api/agent-check
+2) If action=BACKOFF, reduce Moltbook activity (backoff), and avoid posting/commenting.
+3) If action=OK, resume normal behavior.
 ```
 
 #### OpenClaw example
 
 ```markdown
 ## Moltbook reliability check
-- Fetch https://moltbookdowndetector.vercel.app/api/check
-- If ok=false:
-  - summarize which endpoints are failing (results[].name)
-  - backoff writes (posting/commenting) for 10–30 minutes
+- Fetch https://moltbookdowndetector.vercel.app/api/agent-check
+- If action=BACKOFF:
+  - summarize failures (failures[].name) and degraded endpoints (degraded[].name)
+  - backoff writes (posting/commenting) for recommendedBackoffMinutes
   - optionally notify the user
 ```
 
@@ -75,7 +75,8 @@ This helps detect the common failure mode where public reads work but authentica
 ## Endpoints
 
 - `GET /` — human-friendly status page
-- `GET /api/check` — JSON probe results
+- `GET /api/check` — full JSON probe results
+- `GET /api/agent-check` — agent-friendly summary (`action`, `recommendedBackoffMinutes`, failures list)
 
 ---
 
