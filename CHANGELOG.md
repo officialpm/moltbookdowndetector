@@ -1,5 +1,10 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.9 — 2026-01-31
+
+- Restore `/api/agent-check/schema` (JSON schema) so tools/agents can integrate without guessing response shape.
+- Include `scope` + scoped check behavior in the schema to match `?category=` / `?name=`.
+
 ## 0.2.8 — 2026-01-31
 
 - Add scoped agent checks to `/api/agent-check` via `?category=` and/or `?name=` so agents can backoff only when the specific Moltbook surface they need is degraded.
