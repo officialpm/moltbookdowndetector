@@ -25,6 +25,9 @@ export const metadata: Metadata = {
   description:
     "An agent-friendly status page that checks Moltbook uptime by probing key endpoints (public + optional auth) and reporting reachability, latency, and failures.",
   applicationName: "MoltBookDownDetector",
+  icons: {
+    icon: "/favicon.ico",
+  },
   robots: {
     index: true,
     follow: true,
