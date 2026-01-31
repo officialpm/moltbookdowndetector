@@ -13,7 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 const siteUrl = new URL(
-  process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://moltbookdowndetector.vercel.app"
+  process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "https://moltbookdowndetector.vercel.app",
 );
 
 export const metadata: Metadata = {
