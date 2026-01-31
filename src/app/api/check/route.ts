@@ -164,7 +164,7 @@ async function performProbe(): Promise<{
           {
             method: t.method ?? "GET",
             headers: {
-              "user-agent": "moltbookdowndetector/0.2.0 (+https://github.com/officialpm/moltbookdowndetector)",
+              "user-agent": "moltbookdowndetector/0.2.2 (+https://github.com/officialpm/moltbookdowndetector)",
               ...(t.requiresAuth && auth ? auth : {}),
             },
             redirect: "follow",

@@ -5,6 +5,7 @@ import StatusHistory, {
   type HistoryProbeResult,
   useStatusHistory,
 } from "./components/StatusHistory";
+import ReliabilitySummary from "./components/ReliabilitySummary";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import LatencyBar from "./components/LatencyBar";
@@ -343,6 +344,9 @@ export default function StatusCard() {
 
         <StatusHistory history={history} maxEntries={maxEntries} />
       </div>
+
+      {/* Reliability Summary (client-side, based on local history) */}
+      <ReliabilitySummary history={history} />
 
       {/* Individual Endpoint Cards */}
       <EndpointGrid results={view.results} history={history} />

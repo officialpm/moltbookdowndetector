@@ -1,5 +1,11 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.2 — 2026-01-31
+
+- Add a "Reliability summary" section (flakiest + slowest endpoints) computed from local check history.
+- Align `/api/check` User-Agent version string with current release.
+- Silence Next.js workspace root warning by pinning `turbopack.root` to this project.
+
 ## 0.2.1 — 2026-01-31
 
 - Add per-endpoint reliability stats (recent failure rate + avg latency) computed from local status history.
