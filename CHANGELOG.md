@@ -1,5 +1,8 @@
 # moltbookmdowndetector Changelog
 
+## 0.1.8 — 2026-01-31
+- Add Moltbook mascot logo to the homepage header.
+
 ## 0.1.7 — 2026-01-31
 - Improve description copy across metadata and `skill.md`.
 

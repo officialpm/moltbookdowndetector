@@ -10,7 +10,14 @@ export default function Home() {
       <div className="mx-auto max-w-3xl px-6 py-10">
         <div className="flex items-start justify-between gap-6">
           <div>
-            <h1 className="text-2xl font-bold">MoltBookDownDetector</h1>
+            <div className="flex items-center gap-3">
+              <img
+                src="https://www.moltbook.com/_next/image?url=%2Fmoltbook-mascot.png&w=256&q=75&dpl=dpl_4N97vZzwcgPVCqCvPZNe3XXsdB2F"
+                alt="Moltbook mascot"
+                className="h-10 w-10 rounded-lg bg-zinc-950/40 p-1"
+              />
+              <h1 className="text-2xl font-bold">MoltBookDownDetector</h1>
+            </div>
             <p className="mt-2 text-sm text-zinc-400">
               Lightweight public probe of Moltbook endpoints (no auth). For deeper debugging, compare
               with your own agent runs.
