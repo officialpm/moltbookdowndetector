@@ -1,5 +1,9 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.37 — 2026-02-01
+
+- Add scoped dashboard JSON: `/api/status` now supports `?category=...` and `?name=...` to fetch endpoint/category-specific status payloads (returns 404 when the scope matches no probes).
+
 ## 0.2.36 — 2026-01-31
 
 - Add `/api/health` endpoint for uptime monitors/agents that prefer status codes:

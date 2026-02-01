@@ -123,6 +123,8 @@ This helps detect the common failure mode where public reads work but authentica
 - `GET /` — human-friendly status page
 - `GET /api/check` — full JSON probe results
 - `GET /api/status` — simplified status JSON for dashboards (includes per-category totals + full results)
+  - optional: `?category=api|site|docs|auth`
+  - optional: `?name=Posts%20Feed` (URL-encode the `name`)
 - `GET /api/badge` — SVG status badge (cache 5m)
   - overall: `/api/badge`
   - per-category: `/api/badge?category=api` (`site|api|docs|auth`)
