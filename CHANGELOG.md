@@ -1,5 +1,9 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.19 — 2026-01-31
+
+- Add a failure-rate + latency stats strip to “Recent Checks” (Overall or per-endpoint), showing failure rate, avg latency, and p95 based on your stored history.
+
 ## 0.2.18 — 2026-01-31
 
 - Add issue-focused controls to the local Endpoint stats table: category filter, endpoint search, and an “Only issues” toggle to quickly isolate flaky surfaces.

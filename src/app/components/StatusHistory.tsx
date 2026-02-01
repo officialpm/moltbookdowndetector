@@ -118,6 +118,24 @@ function getEndpointResult(entry: HistoryEntry, endpointName: string) {
   return entry.results.find((r) => r.name === endpointName) || null;
 }
 
+function percentile(values: number[], p: number) {
+  if (values.length === 0) return Number.NaN;
+  const sorted = values.slice().sort((a, b) => a - b);
+  const idx = Math.min(sorted.length - 1, Math.max(0, Math.ceil(p * sorted.length) - 1));
+  return sorted[idx];
+}
+
+function fmtMs(ms: number) {
+  if (!Number.isFinite(ms)) return "—";
+  if (ms < 1000) return `${Math.round(ms)}ms`;
+  return `${(ms / 1000).toFixed(2)}s`;
+}
+
+function fmtPct(x: number) {
+  if (!Number.isFinite(x)) return "—";
+  return `${Math.round(x * 100)}%`;
+}
+
 export default function StatusHistory({
   history,
   maxEntries,
@@ -143,6 +161,36 @@ export default function StatusHistory({
     return view;
   }, [endpointNames, view]);
 
+  const stats = useMemo(() => {
+    const data = history
+      .map((entry) => {
+        if (effectiveView.kind === "overall") {
+          return { ok: entry.ok, ms: entry.totalMs };
+        }
+        const r = getEndpointResult(entry, effectiveView.endpointName);
+        if (!r) return { ok: null as boolean | null, ms: Number.NaN };
+        return { ok: r.ok, ms: r.ms };
+      })
+      .filter((d) => d.ok !== null);
+
+    const total = data.length;
+    const failures = data.filter((d) => d.ok === false).length;
+    const failureRate = total ? failures / total : Number.NaN;
+
+    const msValues = data.map((d) => d.ms).filter((ms) => Number.isFinite(ms));
+    const avg = msValues.length
+      ? msValues.reduce((a, b) => a + b, 0) / msValues.length
+      : Number.NaN;
+
+    return {
+      total,
+      failures,
+      failureRate,
+      avgMs: avg,
+      p95Ms: percentile(msValues, 0.95),
+    };
+  }, [effectiveView, history]);
+
   if (history.length === 0) return null;
 
   return (
@@ -153,6 +201,18 @@ export default function StatusHistory({
           <div className="mt-0.5 text-xs text-zinc-500">
             Last {history.length}
             {typeof maxEntries === "number" ? ` / ${maxEntries}` : ""} checks
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
+            <span className="rounded-full border border-zinc-800 bg-zinc-950/40 px-2 py-1 text-zinc-400">
+              Failure rate: <span className="text-zinc-200">{fmtPct(stats.failureRate)}</span>
+              {Number.isFinite(stats.failureRate) ? ` (${stats.failures}/${stats.total})` : ""}
+            </span>
+            <span className="rounded-full border border-zinc-800 bg-zinc-950/40 px-2 py-1 text-zinc-400">
+              Avg: <span className="text-zinc-200">{fmtMs(stats.avgMs)}</span>
+            </span>
+            <span className="rounded-full border border-zinc-800 bg-zinc-950/40 px-2 py-1 text-zinc-400">
+              P95: <span className="text-zinc-200">{fmtMs(stats.p95Ms)}</span>
+            </span>
           </div>
         </div>
 
