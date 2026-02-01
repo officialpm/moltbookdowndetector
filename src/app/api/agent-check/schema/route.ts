@@ -1,24 +1,94 @@
 import { NextResponse } from "next/server";
-import type { AgentCheckResponse } from "../route";
 import { APP_NAME, APP_VERSION } from "@/lib/version";
 
 export const runtime = "nodejs";
+export const revalidate = 300;
 
-// This endpoint exists for tooling/agent integrations that want a stable,
-// machine-readable response shape.
-//
-// Note: we keep the schema lightweight and dependency-free (no zod), since this
-// runs on Vercel and we want to avoid runtime bloat.
-
-type JsonSchema = Record<string, unknown>;
-
-function agentCheckResponseSchema(): JsonSchema {
-  return {
+/**
+ * JSON Schema for /api/agent-check
+ *
+ * Why this exists:
+ * - lets tools/agents integrate without guessing the response shape
+ * - provides stable docs that can be cached (5m)
+ */
+export async function GET() {
+  const base = {
     $schema: "https://json-schema.org/draft/2020-12/schema",
-    $id: `https://moltbookdowndetector.vercel.app/api/agent-check/schema?v=${APP_VERSION}`,
     title: "MoltBookDownDetector AgentCheckResponse",
+    description: `Schema for ${APP_NAME} /api/agent-check (v${APP_VERSION}).`,
     type: "object",
     additionalProperties: false,
+    properties: {
+      ok: { type: "boolean" },
+      checkedAt: { type: "string", description: "ISO timestamp" },
+      scope: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          category: { type: "string", enum: ["site", "api", "docs", "auth"] },
+          name: { type: "string" },
+        },
+        required: [],
+      },
+
+      totalProbes: { type: "integer", minimum: 0 },
+      totalFailures: { type: "integer", minimum: 0 },
+      totalDegraded: { type: "integer", minimum: 0 },
+      degradedThresholdMs: { type: "number", minimum: 0 },
+
+      byCategory: {
+        type: "object",
+        description: "Summary counts keyed by category.",
+        additionalProperties: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            total: { type: "integer", minimum: 0 },
+            failures: { type: "integer", minimum: 0 },
+            degraded: { type: "integer", minimum: 0 },
+            ok: { type: "boolean" },
+          },
+          required: ["total", "failures", "degraded", "ok"],
+        },
+      },
+
+      action: { type: "string", enum: ["OK", "BACKOFF"] },
+      recommendedBackoffMinutes: { type: "number", minimum: 0 },
+
+      failures: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            name: { type: "string" },
+            category: { type: "string", enum: ["site", "api", "docs", "auth"] },
+            status: { type: "integer", minimum: 0 },
+            error: { type: "string" },
+            ms: { type: "number", minimum: 0 },
+            url: { type: "string" },
+          },
+          required: ["name", "category", "status", "ms", "url"],
+        },
+      },
+
+      degraded: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            name: { type: "string" },
+            category: { type: "string", enum: ["site", "api", "docs", "auth"] },
+            status: { type: "integer", minimum: 0 },
+            error: { type: "string" },
+            ms: { type: "number", minimum: 0 },
+            url: { type: "string" },
+          },
+          required: ["name", "category", "status", "ms", "url"],
+        },
+      },
+    },
     required: [
       "ok",
       "checkedAt",
@@ -32,154 +102,56 @@ function agentCheckResponseSchema(): JsonSchema {
       "failures",
       "degraded",
     ],
-    properties: {
-      ok: { type: "boolean" },
-      checkedAt: {
-        type: "string",
-        description: "ISO timestamp when probes were executed",
-      },
-      scope: {
-        type: "object",
-        additionalProperties: false,
-        required: [],
-        properties: {
-          category: { type: "string" },
-          name: { type: "string" },
-        },
-        description:
-          "Optional scope if the caller requested a subset via ?category= or ?name=",
-      },
-      totalProbes: {
-        type: "number",
-        description: "How many probes were evaluated after applying any requested scope",
-      },
-      totalFailures: {
-        type: "number",
-        description: "How many probes are failing (ok=false)",
-      },
-      totalDegraded: {
-        type: "number",
-        description:
-          "How many probes are considered degraded (ok=true but slow based on degradedThresholdMs)",
-      },
-      degradedThresholdMs: {
-        type: "number",
-        description: "Latency threshold used to classify degraded probes",
-      },
-      byCategory: {
-        type: "object",
-        additionalProperties: {
-          type: "object",
-          additionalProperties: false,
-          required: ["total", "failures", "degraded", "ok"],
-          properties: {
-            total: { type: "number" },
-            failures: { type: "number" },
-            degraded: { type: "number" },
-            ok: { type: "boolean" },
-          },
-        },
-        description:
-          "Category-level summary counts for the scoped probe set (keys typically: site|api|docs|auth)",
-      },
-      action: { type: "string", enum: ["OK", "BACKOFF"] },
-      recommendedBackoffMinutes: {
-        type: "number",
-        description:
-          "Suggested backoff window for write-heavy actions when unhealthy (0 when OK)",
-      },
-      failures: {
-        type: "array",
-        items: {
-          type: "object",
-          additionalProperties: false,
-          required: ["name", "category", "status", "ms", "url"],
-          properties: {
-            name: { type: "string" },
-            category: { type: "string" },
-            status: { type: "number" },
-            error: { type: ["string", "null"] },
-            ms: { type: "number" },
-            url: { type: "string" },
-          },
-        },
-      },
-      degraded: {
-        type: "array",
-        items: {
-          type: "object",
-          additionalProperties: false,
-          required: ["name", "category", "status", "ms", "url"],
-          properties: {
-            name: { type: "string" },
-            category: { type: "string" },
-            status: { type: "number" },
-            error: { type: ["string", "null"] },
-            ms: { type: "number" },
-            url: { type: "string" },
-          },
-        },
-      },
-    },
-  };
-}
+  } as const;
 
-function exampleResponse(): AgentCheckResponse {
-  return {
-    ok: false,
-    checkedAt: new Date(0).toISOString(),
-    scope: { category: "api" },
-
-    totalProbes: 3,
-    totalFailures: 1,
+  const example = {
+    ok: true,
+    checkedAt: new Date().toISOString(),
+    totalProbes: 8,
+    totalFailures: 0,
     totalDegraded: 1,
     degradedThresholdMs: 2500,
     byCategory: {
-      api: { total: 3, failures: 1, degraded: 1, ok: false },
+      site: { total: 2, failures: 0, degraded: 0, ok: true },
+      api: { total: 4, failures: 0, degraded: 1, ok: true },
     },
-
-    action: "BACKOFF",
-    recommendedBackoffMinutes: 20,
-    failures: [
+    action: "OK",
+    recommendedBackoffMinutes: 0,
+    failures: [],
+    degraded: [
       {
         name: "Posts Feed",
         category: "api",
-        status: 0,
-        error: "timeout",
-        ms: 5000,
-        url: "https://www.moltbook.com/api/v1/posts?sort=new&limit=1",
-      },
-    ],
-    degraded: [
-      {
-        name: "Post Detail",
-        category: "api",
         status: 200,
-        error: undefined,
-        ms: 3800,
-        url: "https://www.moltbook.com/api/v1/posts/abc123",
+        ms: 3120,
+        url: "https://www.moltbook.com/api/v1/posts",
       },
     ],
   };
-}
 
-export async function GET() {
   return NextResponse.json(
     {
-      app: {
-        name: APP_NAME,
-        version: APP_VERSION,
+      ...base,
+      $id: `https://moltbookdowndetector.vercel.app/api/agent-check/schema?v=${encodeURIComponent(
+        APP_VERSION
+      )}`,
+      examples: [example],
+      docs: {
+        endpoint: "/api/agent-check",
+        formats: ["json", "text", "md"],
+        query: {
+          category: "site|api|docs|auth",
+          name: "<exact probe name>",
+          format: "json|text|md",
+        },
+        notes: [
+          "If you request a scope with no matching probes, /api/agent-check returns 404 (to avoid false OK from an empty list).",
+        ],
       },
-      query: {
-        description:
-          "Optional scoping params: ?category=site|api|docs|auth and/or ?name=<probe name>. Optional output format: ?format=json|text|markdown (default json).",
-      },
-      responseSchema: agentCheckResponseSchema(),
-      example: exampleResponse(),
     },
     {
       headers: {
-        "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=3600",
+        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
       },
     }
   );

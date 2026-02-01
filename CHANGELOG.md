@@ -1,9 +1,12 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.21 — 2026-01-31
+
+- Add `/api/agent-check/schema` (JSON Schema) so tools/agents can integrate with `/api/agent-check` without guessing the response shape.
+
 ## 0.2.20 — 2026-01-31
 
 - Enrich `/api/agent-check` with summary fields (`totalProbes`, `totalFailures`, `totalDegraded`, `degradedThresholdMs`) plus a `byCategory` breakdown so agents can make quick backoff decisions without iterating arrays.
-- Update `/api/agent-check/schema` and `public/skill.md` to document the new response shape.
 
 ## 0.2.19 — 2026-01-31
 
