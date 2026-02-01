@@ -1,5 +1,12 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.29 — 2026-01-31
+
+- Persist richer per-endpoint history in the browser (status code + error string), so local reliability views can distinguish timeouts vs other failures.
+- Improve the dashboard UI:
+  - Recent Checks: add Timeout% alongside failure rate/latency.
+  - Endpoint stats table: add Timeout% and "Last err" columns.
+
 ## 0.2.28 — 2026-01-31
 
 - Add `/api/openapi` (OpenAPI 3.0 JSON) so agents/tools can discover and integrate with the API surface without reading docs.

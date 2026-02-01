@@ -20,11 +20,14 @@ type EndpointAgg = {
   n: number;
   ok: number;
   fail: number;
+  timeouts: number;
   p95Ms: number;
   avgMs: number;
   lastSeenAt?: string;
   lastFailAt?: string;
   lastOkAt?: string;
+  /** Latest observed error string/status for this endpoint (from history). */
+  lastError?: string;
 };
 
 function percentile(values: number[], p: number) {
@@ -75,6 +78,7 @@ export default function EndpointStatsTable({
           n: 0,
           ok: 0,
           fail: 0,
+          timeouts: 0,
           p95Ms: 0,
           avgMs: 0,
         };
@@ -84,14 +88,22 @@ export default function EndpointStatsTable({
         msArr.push(ms);
         msMap.set(r.name, msArr);
 
+        const isTimeout = !r.ok && r.error === "timeout";
+        const errLabel =
+          !r.ok && (r.error || typeof r.status === "number")
+            ? String(r.error || r.status)
+            : undefined;
+
         const next: EndpointAgg = {
           ...prev,
           n: prev.n + 1,
           ok: prev.ok + (r.ok ? 1 : 0),
           fail: prev.fail + (r.ok ? 0 : 1),
+          timeouts: prev.timeouts + (isTimeout ? 1 : 0),
           lastSeenAt: prev.lastSeenAt ?? entry.timestamp,
           lastOkAt: r.ok ? prev.lastOkAt ?? entry.timestamp : prev.lastOkAt,
           lastFailAt: !r.ok ? prev.lastFailAt ?? entry.timestamp : prev.lastFailAt,
+          lastError: !r.ok ? prev.lastError ?? errLabel : prev.lastError,
         };
         agg.set(r.name, next);
       }
@@ -214,11 +226,13 @@ export default function EndpointStatsTable({
               <th className="text-left font-medium py-2 pr-4">Endpoint</th>
               <th className="text-left font-medium py-2 pr-4">Category</th>
               <th className="text-right font-medium py-2 pr-4">Fail%</th>
+              <th className="text-right font-medium py-2 pr-4">Timeout%</th>
               <th className="text-right font-medium py-2 pr-4">p95</th>
               <th className="text-right font-medium py-2 pr-4">avg</th>
               <th className="text-right font-medium py-2 pr-4">n</th>
               <th className="text-right font-medium py-2 pr-4">Last OK</th>
-              <th className="text-right font-medium py-2">Last fail</th>
+              <th className="text-right font-medium py-2 pr-4">Last fail</th>
+              <th className="text-left font-medium py-2">Last err</th>
             </tr>
           </thead>
           <tbody>
@@ -243,11 +257,15 @@ export default function EndpointStatsTable({
                   >
                     {failPct}%
                   </td>
+                  <td className="py-2 pr-4 text-right text-zinc-400">
+                    {r.n ? Math.round((r.timeouts / r.n) * 100) : 0}%
+                  </td>
                   <td className="py-2 pr-4 text-right text-zinc-300">{r.p95Ms}ms</td>
                   <td className="py-2 pr-4 text-right text-zinc-400">{r.avgMs}ms</td>
                   <td className="py-2 pr-4 text-right text-zinc-500">{r.n}</td>
                   <td className="py-2 pr-4 text-right text-zinc-500">{fmtTime(r.lastOkAt)}</td>
-                  <td className="py-2 text-right text-zinc-500">{fmtTime(r.lastFailAt)}</td>
+                  <td className="py-2 pr-4 text-right text-zinc-500">{fmtTime(r.lastFailAt)}</td>
+                  <td className="py-2 text-zinc-500 truncate max-w-[220px]">{r.lastError || "—"}</td>
                 </tr>
               );
             })}

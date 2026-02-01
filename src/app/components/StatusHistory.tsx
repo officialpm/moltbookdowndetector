@@ -6,6 +6,10 @@ export type HistoryProbeResult = {
   name: string;
   ok: boolean;
   ms: number;
+  /** HTTP status code (0 when fetch failed). */
+  status?: number;
+  /** Error string (e.g. "timeout") when fetch failed. */
+  error?: string;
 };
 
 export type HistoryEntry = {
@@ -36,8 +40,10 @@ function coerceHistoryEntry(x: unknown): HistoryEntry | null {
       const name = typeof rr.name === "string" ? rr.name : null;
       const rok = typeof rr.ok === "boolean" ? rr.ok : null;
       const ms = typeof rr.ms === "number" ? rr.ms : null;
+      const status = typeof rr.status === "number" ? rr.status : undefined;
+      const error = typeof rr.error === "string" ? rr.error : undefined;
       if (!name || rok === null || ms === null) return null;
-      return { name, ok: rok, ms };
+      return { name, ok: rok, ms, ...(typeof status === "number" ? { status } : {}), ...(error ? { error } : {}) };
     })
     .filter((r): r is HistoryProbeResult => Boolean(r));
 
@@ -165,17 +171,21 @@ export default function StatusHistory({
     const data = history
       .map((entry) => {
         if (effectiveView.kind === "overall") {
-          return { ok: entry.ok, ms: entry.totalMs };
+          const timeout = (entry.results || []).some((rr) => rr.error === "timeout");
+          return { ok: entry.ok, ms: entry.totalMs, timeout };
         }
         const r = getEndpointResult(entry, effectiveView.endpointName);
-        if (!r) return { ok: null as boolean | null, ms: Number.NaN };
-        return { ok: r.ok, ms: r.ms };
+        if (!r) return { ok: null as boolean | null, ms: Number.NaN, timeout: false };
+        return { ok: r.ok, ms: r.ms, timeout: r.error === "timeout" };
       })
       .filter((d) => d.ok !== null);
 
     const total = data.length;
     const failures = data.filter((d) => d.ok === false).length;
     const failureRate = total ? failures / total : Number.NaN;
+
+    const timeouts = data.filter((d) => d.timeout).length;
+    const timeoutRate = total ? timeouts / total : Number.NaN;
 
     const msValues = data.map((d) => d.ms).filter((ms) => Number.isFinite(ms));
     const avg = msValues.length
@@ -186,6 +196,8 @@ export default function StatusHistory({
       total,
       failures,
       failureRate,
+      timeouts,
+      timeoutRate,
       avgMs: avg,
       p95Ms: percentile(msValues, 0.95),
     };
@@ -212,6 +224,10 @@ export default function StatusHistory({
             </span>
             <span className="rounded-full border border-zinc-800 bg-zinc-950/40 px-2 py-1 text-zinc-400">
               P95: <span className="text-zinc-200">{fmtMs(stats.p95Ms)}</span>
+            </span>
+            <span className="rounded-full border border-zinc-800 bg-zinc-950/40 px-2 py-1 text-zinc-400">
+              Timeouts: <span className="text-zinc-200">{fmtPct(stats.timeoutRate)}</span>
+              {Number.isFinite(stats.timeoutRate) ? ` (${stats.timeouts}/${stats.total})` : ""}
             </span>
           </div>
         </div>
@@ -243,9 +259,23 @@ export default function StatusHistory({
 
       <div className="flex gap-1 items-end h-8">
         {history.map((entry, i) => {
-          const datum =
+          const datum:
+            | {
+                ok: boolean | null;
+                ms: number;
+                label: string;
+                status?: number;
+                error?: string;
+                timeout?: boolean;
+              }
+            | undefined =
             effectiveView.kind === "overall"
-              ? { ok: entry.ok, ms: entry.totalMs, label: "Overall" }
+              ? {
+                  ok: entry.ok,
+                  ms: entry.totalMs,
+                  label: "Overall",
+                  timeout: (entry.results || []).some((rr) => rr.error === "timeout"),
+                }
               : (() => {
                   const r = getEndpointResult(entry, effectiveView.endpointName);
                   if (!r) {
@@ -255,7 +285,14 @@ export default function StatusHistory({
                       label: effectiveView.endpointName,
                     };
                   }
-                  return { ok: r.ok, ms: r.ms, label: r.name };
+                  return {
+                    ok: r.ok,
+                    ms: r.ms,
+                    label: r.name,
+                    ...(typeof r.status === "number" ? { status: r.status } : {}),
+                    ...(r.error ? { error: r.error } : {}),
+                    timeout: r.error === "timeout",
+                  };
                 })();
 
           const ms = Number.isFinite(datum.ms) ? datum.ms : 0;
@@ -266,12 +303,18 @@ export default function StatusHistory({
               ? "bg-zinc-700/50 hover:bg-zinc-600/60"
               : datum.ok
                 ? "bg-emerald-500/80 hover:bg-emerald-400"
-                : "bg-red-500/80 hover:bg-red-400";
+                : datum.timeout
+                  ? "bg-amber-500/80 hover:bg-amber-400"
+                  : "bg-red-500/80 hover:bg-red-400";
 
           const title =
             datum.ok === null
               ? `${fmtTime(entry.timestamp)} — no data for ${datum.label}`
-              : `${fmtTime(entry.timestamp)} — ${datum.label}: ${datum.ok ? "OK" : "Failed"} · ${datum.ms}ms`;
+              : `${fmtTime(entry.timestamp)} — ${datum.label}: ${datum.ok ? "OK" : datum.timeout ? "Timeout" : "Failed"} · ${datum.ms}ms${
+                  !datum.ok && (datum.error || typeof datum.status === "number")
+                    ? ` · ${datum.error || datum.status}`
+                    : ""
+                }`;
 
           return (
             <div
@@ -291,14 +334,27 @@ export default function StatusHistory({
                         ? "text-zinc-300"
                         : datum.ok
                           ? "text-emerald-400"
-                          : "text-red-400"
+                          : datum.timeout
+                            ? "text-amber-400"
+                            : "text-red-400"
                     }
                   >
-                    {datum.ok === null ? "No data" : datum.ok ? "OK" : "Failed"}
+                    {datum.ok === null
+                      ? "No data"
+                      : datum.ok
+                        ? "OK"
+                        : datum.timeout
+                          ? "Timeout"
+                          : "Failed"}
                   </div>
                   <div className="text-zinc-400">
                     {datum.ok === null ? "—" : `${datum.ms}ms`}
                   </div>
+                  {!datum.ok && (datum.error || typeof datum.status === "number") ? (
+                    <div className="text-zinc-500 text-[10px]">
+                      {datum.error || datum.status}
+                    </div>
+                  ) : null}
                   <div className="text-zinc-500 text-[10px]">
                     {fmtTime(entry.timestamp)}
                   </div>
