@@ -20,6 +20,7 @@ export type StatusResponse = {
   totals: {
     totalProbes: number;
     totalFailures: number;
+    totalTimeouts: number;
   };
   byCategory: Record<
     string,
@@ -27,6 +28,7 @@ export type StatusResponse = {
       ok: boolean;
       total: number;
       failures: number;
+      timeouts: number;
     }
   >;
 
@@ -39,17 +41,20 @@ function summarize(data: ProbeResponse): Omit<StatusResponse, "probeRegion"> {
 
   for (const r of data.results || []) {
     const key = r.category || "unknown";
-    const prev = byCategory[key] || { ok: true, total: 0, failures: 0 };
+    const prev = byCategory[key] || { ok: true, total: 0, failures: 0, timeouts: 0 };
     const isFailure = !r.ok;
+    const isTimeout = isFailure && r.error === "timeout";
     byCategory[key] = {
       ok: prev.ok && !isFailure,
       total: prev.total + 1,
       failures: prev.failures + (isFailure ? 1 : 0),
+      timeouts: prev.timeouts + (isTimeout ? 1 : 0),
     };
   }
 
   const totalProbes = (data.results || []).length;
   const totalFailures = (data.results || []).filter((r) => !r.ok).length;
+  const totalTimeouts = (data.results || []).filter((r) => !r.ok && r.error === "timeout").length;
 
   return {
     ok: data.ok,
@@ -60,7 +65,7 @@ function summarize(data: ProbeResponse): Omit<StatusResponse, "probeRegion"> {
     authProbesIncluded: data.authProbesIncluded,
 
     totalMs: data.totalMs,
-    totals: { totalProbes, totalFailures },
+    totals: { totalProbes, totalFailures, totalTimeouts },
     byCategory,
 
     results: data.results || [],

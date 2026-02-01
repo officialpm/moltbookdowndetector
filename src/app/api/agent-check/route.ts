@@ -30,6 +30,8 @@ export type AgentCheckResponse = {
    */
   totalProbes: number;
   totalFailures: number;
+  /** Failures caused by request timeouts. */
+  totalTimeouts: number;
   totalDegraded: number;
   degradedThresholdMs: number;
   byCategory: Record<
@@ -37,6 +39,8 @@ export type AgentCheckResponse = {
     {
       total: number;
       failures: number;
+      /** Failures caused by request timeouts. */
+      timeouts: number;
       degraded: number;
       ok: boolean;
     }
@@ -65,6 +69,7 @@ function toAgentResponse(
   });
 
   const failures = filtered.filter((r) => !r.ok);
+  const timeouts = failures.filter((r) => r.error === "timeout");
 
   // "Degraded" heuristic: slow but successful endpoints (p95 would be better; keep it simple)
   const degraded = filtered.filter((r) => r.ok && r.ms >= DEGRADED_THRESHOLD_MS);
@@ -75,15 +80,18 @@ function toAgentResponse(
     const prev = byCategory[key] || {
       total: 0,
       failures: 0,
+      timeouts: 0,
       degraded: 0,
       ok: true,
     };
     const isFailure = !r.ok;
+    const isTimeout = isFailure && r.error === "timeout";
     const isDegraded = r.ok && r.ms >= DEGRADED_THRESHOLD_MS;
 
     const next = {
       total: prev.total + 1,
       failures: prev.failures + (isFailure ? 1 : 0),
+      timeouts: prev.timeouts + (isTimeout ? 1 : 0),
       degraded: prev.degraded + (isDegraded ? 1 : 0),
       ok: prev.ok && !isFailure,
     };
@@ -107,6 +115,7 @@ function toAgentResponse(
 
     totalProbes: filtered.length,
     totalFailures: failures.length,
+    totalTimeouts: timeouts.length,
     totalDegraded: degraded.length,
     degradedThresholdMs: DEGRADED_THRESHOLD_MS,
     byCategory,
@@ -149,13 +158,13 @@ function toPlainText(resp: AgentCheckResponse): string {
       ? `; degraded: ${resp.degraded.map((d) => d.name).join(", ")}`
       : "";
     const authNote = resp.authEnabled ? "auth=on" : "auth=off";
-    return `OK${scope} — checkedAt=${resp.checkedAt} — ${authNote} — probes=${resp.totalProbes}, failures=${resp.totalFailures}, degraded=${resp.totalDegraded}${degradedNote}`;
+    return `OK${scope} — checkedAt=${resp.checkedAt} — ${authNote} — probes=${resp.totalProbes}, failures=${resp.totalFailures}, timeouts=${resp.totalTimeouts}, degraded=${resp.totalDegraded}${degradedNote}`;
   }
 
   const lines: string[] = [];
   const authNote = resp.authEnabled ? "auth=on" : "auth=off";
   lines.push(
-    `BACKOFF${scope} — checkedAt=${resp.checkedAt} — ${authNote} — probes=${resp.totalProbes}, failures=${resp.totalFailures}, degraded=${resp.totalDegraded} — backoff=${resp.recommendedBackoffMinutes}m`
+    `BACKOFF${scope} — checkedAt=${resp.checkedAt} — ${authNote} — probes=${resp.totalProbes}, failures=${resp.totalFailures}, timeouts=${resp.totalTimeouts}, degraded=${resp.totalDegraded} — backoff=${resp.recommendedBackoffMinutes}m`
   );
 
   if (resp.failures.length) {
@@ -186,7 +195,7 @@ function toMarkdown(resp: AgentCheckResponse): string {
           .map((d) => `- ${d.name} (${d.ms}ms)`)
           .join("\n")}`
       : "";
-    return `**OK**${scope}\n\n- checkedAt: ${resp.checkedAt}\n- authEnabled: ${resp.authEnabled}\n- authProbesIncluded: ${resp.authProbesIncluded}\n- probes: ${resp.totalProbes}\n- failures: ${resp.totalFailures}\n- degraded: ${resp.totalDegraded}${degradedNote}`;
+    return `**OK**${scope}\n\n- checkedAt: ${resp.checkedAt}\n- authEnabled: ${resp.authEnabled}\n- authProbesIncluded: ${resp.authProbesIncluded}\n- probes: ${resp.totalProbes}\n- failures: ${resp.totalFailures}\n- timeouts: ${resp.totalTimeouts}\n- degraded: ${resp.totalDegraded}${degradedNote}`;
   }
 
   const failures = resp.failures.length
@@ -204,7 +213,7 @@ function toMarkdown(resp: AgentCheckResponse): string {
         .join("\n")}`
     : "";
 
-  return `**BACKOFF**${scope}\n\n- checkedAt: ${resp.checkedAt}\n- authEnabled: ${resp.authEnabled}\n- authProbesIncluded: ${resp.authProbesIncluded}\n- probes: ${resp.totalProbes}\n- failures: ${resp.totalFailures}\n- degraded: ${resp.totalDegraded}\n- recommendedBackoffMinutes: ${resp.recommendedBackoffMinutes}${failures}${degraded}`;
+  return `**BACKOFF**${scope}\n\n- checkedAt: ${resp.checkedAt}\n- authEnabled: ${resp.authEnabled}\n- authProbesIncluded: ${resp.authProbesIncluded}\n- probes: ${resp.totalProbes}\n- failures: ${resp.totalFailures}\n- timeouts: ${resp.totalTimeouts}\n- degraded: ${resp.totalDegraded}\n- recommendedBackoffMinutes: ${resp.recommendedBackoffMinutes}${failures}${degraded}`;
 }
 
 export async function GET(request: Request) {

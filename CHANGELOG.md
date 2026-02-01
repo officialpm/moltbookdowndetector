@@ -1,5 +1,12 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.26 — 2026-01-31
+
+- Add timeout-specific counts to status APIs so dashboards/agents can distinguish timeouts from other failures:
+  - `/api/status`: `totals.totalTimeouts` + `byCategory[*].timeouts`
+  - `/api/agent-check`: `totalTimeouts` + `byCategory[*].timeouts` (and expose in text/markdown formats)
+  - `/api/agent-check/schema`: update schema + example
+
 ## 0.2.25 — 2026-01-31
 
 - Add `/api/status`, a dashboard-friendly status JSON endpoint (overall + per-category totals + full per-endpoint results).

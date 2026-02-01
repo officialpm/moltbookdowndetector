@@ -38,6 +38,11 @@ export async function GET() {
 
       totalProbes: { type: "integer", minimum: 0 },
       totalFailures: { type: "integer", minimum: 0 },
+      totalTimeouts: {
+        type: "integer",
+        minimum: 0,
+        description: "Failures caused by request timeouts.",
+      },
       totalDegraded: { type: "integer", minimum: 0 },
       degradedThresholdMs: { type: "number", minimum: 0 },
 
@@ -50,10 +55,15 @@ export async function GET() {
           properties: {
             total: { type: "integer", minimum: 0 },
             failures: { type: "integer", minimum: 0 },
+            timeouts: {
+              type: "integer",
+              minimum: 0,
+              description: "Failures caused by request timeouts.",
+            },
             degraded: { type: "integer", minimum: 0 },
             ok: { type: "boolean" },
           },
-          required: ["total", "failures", "degraded", "ok"],
+          required: ["total", "failures", "timeouts", "degraded", "ok"],
         },
       },
 
@@ -99,6 +109,7 @@ export async function GET() {
       "checkedAt",
       "totalProbes",
       "totalFailures",
+      "totalTimeouts",
       "totalDegraded",
       "degradedThresholdMs",
       "byCategory",
@@ -115,11 +126,12 @@ export async function GET() {
     probeRegion: "sfo1",
     totalProbes: 8,
     totalFailures: 0,
+    totalTimeouts: 0,
     totalDegraded: 1,
     degradedThresholdMs: 2500,
     byCategory: {
-      site: { total: 2, failures: 0, degraded: 0, ok: true },
-      api: { total: 4, failures: 0, degraded: 1, ok: true },
+      site: { total: 2, failures: 0, timeouts: 0, degraded: 0, ok: true },
+      api: { total: 4, failures: 0, timeouts: 0, degraded: 1, ok: true },
     },
     action: "OK",
     recommendedBackoffMinutes: 0,
