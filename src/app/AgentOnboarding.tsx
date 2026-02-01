@@ -31,6 +31,9 @@ Status badges (Markdown):
 Quick check:
   curl -s ${new URL("/api/agent-check", skillUrl).toString()} | jq .
 
+Agent context (Markdown, paste into logs/prompts):
+  curl -s ${new URL("/api/agent-context", skillUrl).toString()}
+
 Scoped checks (useful for agents that only care about a surface):
   API-only: curl -s ${new URL("/api/agent-check?category=api", skillUrl).toString()} | jq .
   One endpoint: curl -s ${new URL("/api/agent-check?name=Posts%20Feed", skillUrl).toString()} | jq .
@@ -41,6 +44,7 @@ Prometheus metrics:
   }, [skillUrl, badgeUrl, endpointBadgeUrl, categoryBadgeUrl]);
 
   const curlCommand = `curl -s ${new URL("/api/agent-check", skillUrl).toString()} | jq .`;
+  const curlCommandContext = `curl -s ${new URL("/api/agent-context", skillUrl).toString()}`;
   const curlCommandApi = `curl -s ${new URL(
     "/api/agent-check?category=api",
     skillUrl
@@ -195,6 +199,19 @@ Prometheus metrics:
             </div>
             <pre className="overflow-x-auto p-4 text-sm text-emerald-400">
               <code>{curlCommand}</code>
+            </pre>
+
+            <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-2">
+              <span className="text-xs text-zinc-500">Agent context (Markdown)</span>
+              <button
+                onClick={() => copy(curlCommandContext)}
+                className="text-xs text-zinc-400 hover:text-zinc-300"
+              >
+                Copy
+              </button>
+            </div>
+            <pre className="overflow-x-auto p-4 text-sm text-emerald-400">
+              <code>{curlCommandContext}</code>
             </pre>
 
             <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-2">

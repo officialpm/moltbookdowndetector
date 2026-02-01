@@ -1,5 +1,10 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.14 — 2026-01-31
+
+- Add `/api/agent-context` endpoint that returns a paste-ready, agent-readable status summary (Markdown by default, JSON via `?format=json`) so agents can log/ground decisions without custom parsing.
+- Update Agent Integration UI + `public/skill.md` to document and expose the new context endpoint.
+
 ## 0.2.13 — 2026-01-31
 
 - Add an Export Diagnostics button that downloads (or copies) a JSON bundle containing the latest probe result + local history, so you can attach it to bug reports or share with agents.
