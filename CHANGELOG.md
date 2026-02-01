@@ -1,5 +1,10 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.12 — 2026-01-31
+
+- Add endpoint filters (category chips + search) so you can focus on specific Moltbook surfaces.
+- Persist filters in the URL (`?category=` / `?q=`) for shareable, agent-friendly deep links.
+
 ## 0.2.11 — 2026-01-31
 
 - Re-add `/api/agent-check/schema` so agents/tools can integrate without guessing response shape.

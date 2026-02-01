@@ -7,6 +7,7 @@ import StatusHistory, {
 } from "./components/StatusHistory";
 import ReliabilitySummary from "./components/ReliabilitySummary";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import LatencyBar from "./components/LatencyBar";
 import RefreshButton from "./components/RefreshButton";
@@ -236,6 +237,19 @@ export default function StatusCard() {
   const [lastRefresh, setLastRefresh] = useState<Date | undefined>();
   const { history, addEntry, maxEntries } = useStatusHistory();
 
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [categoryFilter, setCategoryFilter] = useState<
+    "all" | "site" | "api" | "docs" | "auth"
+  >(() => {
+    const raw = searchParams.get("category");
+    if (raw === "site" || raw === "api" || raw === "docs" || raw === "auth") return raw;
+    return "all";
+  });
+
+  const [query, setQuery] = useState(() => searchParams.get("q") || "");
+
   const doFetch = useCallback(async () => {
     setIsRefreshing(true);
     try {
@@ -300,6 +314,38 @@ export default function StatusCard() {
     };
   }, [state]);
 
+  useEffect(() => {
+    const sp = new URLSearchParams();
+    if (categoryFilter !== "all") sp.set("category", categoryFilter);
+    if (query.trim()) sp.set("q", query.trim());
+
+    const url = sp.toString() ? `/?${sp.toString()}` : "/";
+    router.replace(url, { scroll: false });
+  }, [categoryFilter, query, router]);
+
+  const filteredResults = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return (view.results || []).filter((r) => {
+      const catOk = categoryFilter === "all" ? true : r.category === categoryFilter;
+      if (!catOk) return false;
+      if (!q) return true;
+      return (
+        r.name.toLowerCase().includes(q) ||
+        new URL(r.url).pathname.toLowerCase().includes(q)
+      );
+    });
+  }, [view.results, categoryFilter, query]);
+
+  const filterCounts = useMemo(() => {
+    const counts = { all: 0, site: 0, api: 0, docs: 0, auth: 0 } as const;
+    const mutable = { ...counts } as Record<keyof typeof counts, number>;
+    for (const r of view.results || []) {
+      mutable.all += 1;
+      mutable[r.category] = (mutable[r.category] || 0) + 1;
+    }
+    return mutable;
+  }, [view.results]);
+
   return (
     <div className="space-y-6">
       {/* Main Status Banner */}
@@ -348,12 +394,77 @@ export default function StatusCard() {
       {/* Reliability Summary (client-side, based on local history) */}
       <ReliabilitySummary history={history} />
 
+      {/* Filters */}
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-4">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            {(
+              [
+                { key: "all", label: "All" },
+                { key: "site", label: "Core Site" },
+                { key: "api", label: "API" },
+                { key: "docs", label: "Docs" },
+                { key: "auth", label: "Auth" },
+              ] as const
+            ).map((c) => {
+              const active = categoryFilter === c.key;
+              const count = filterCounts[c.key];
+              return (
+                <button
+                  key={c.key}
+                  onClick={() => setCategoryFilter(c.key)}
+                  className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                    active
+                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
+                      : "border-zinc-800 bg-zinc-950/30 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300"
+                  }`}
+                >
+                  {c.label}
+                  <span className="ml-2 text-[10px] text-zinc-500">{count}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Filter endpoints…"
+                className="w-56 rounded-lg border border-zinc-800 bg-zinc-950/40 px-3 py-2 text-xs text-zinc-200 placeholder:text-zinc-600 outline-none focus:border-zinc-700"
+              />
+              {query ? (
+                <button
+                  onClick={() => setQuery("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+                  aria-label="Clear"
+                  type="button"
+                >
+                  ×
+                </button>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-2 text-[11px] text-zinc-500">
+          Tip: share this filtered view by copying the URL.
+        </div>
+      </div>
+
       {/* Individual Endpoint Cards */}
-      <EndpointGrid results={view.results} history={history} />
+      <EndpointGrid results={filteredResults} history={history} />
 
       {state.kind === "ok" && !view.results.length && (
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 px-5 py-8 text-center">
           <div className="text-zinc-500">No endpoints configured</div>
+        </div>
+      )}
+
+      {state.kind === "ok" && view.results.length > 0 && filteredResults.length === 0 && (
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 px-5 py-8 text-center">
+          <div className="text-zinc-500">No endpoints match your filters</div>
         </div>
       )}
 

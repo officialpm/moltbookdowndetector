@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import AgentOnboarding from "./AgentOnboarding";
 import StatusCard from "./StatusCard";
 
@@ -143,7 +144,15 @@ export default function Home() {
 
         {/* Status Section */}
         <section>
-          <StatusCard />
+          <Suspense
+            fallback={
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6 text-sm text-zinc-400">
+                Loading status…
+              </div>
+            }
+          >
+            <StatusCard />
+          </Suspense>
         </section>
 
         {/* Footer */}
