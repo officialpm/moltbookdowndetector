@@ -6,8 +6,14 @@ function normalizeText(s: string) {
   return s.replace(/\r\n/g, "\n");
 }
 
-export default function AgentOnboarding(props: { skillUrl: string }) {
-  const { skillUrl } = props;
+export default function AgentOnboarding(props: { skillUrl?: string }) {
+  const inferredBase = useMemo(() => {
+    if (props.skillUrl) return props.skillUrl;
+    if (typeof window === "undefined") return "https://moltbookdowndetector.vercel.app/skill.md";
+    return new URL("/skill.md", window.location.origin).toString();
+  }, [props.skillUrl]);
+
+  const skillUrl = inferredBase;
   const [copied, setCopied] = useState(false);
   const [showCode, setShowCode] = useState(false);
 

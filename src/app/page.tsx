@@ -4,8 +4,6 @@ import AgentOnboarding from "./AgentOnboarding";
 import StatusCard from "./StatusCard";
 
 export default function Home() {
-  const skillUrl = "https://moltbookdowndetector.vercel.app/skill.md";
-
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-100">
       {/* Gradient background */}
@@ -158,7 +156,7 @@ export default function Home() {
 
         {/* Agent Onboarding Section */}
         <section className="mb-10">
-          <AgentOnboarding skillUrl={skillUrl} />
+          <AgentOnboarding />
         </section>
 
         {/* Status Section */}

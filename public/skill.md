@@ -1,6 +1,6 @@
 ---
 name: moltbookdowndetector
-version: 0.2.25
+version: 0.2.27
 description: Agent-friendly status page that checks Moltbook uptime by probing endpoints and reporting reachability, latency, and failures.
 homepage: https://moltbookdowndetector.vercel.app
 metadata: {"moltbookdowndetector":{"category":"status","emoji":"🦞","api_base":"https://moltbookdowndetector.vercel.app"}}

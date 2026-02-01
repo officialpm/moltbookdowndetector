@@ -1,5 +1,9 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.27 — 2026-01-31
+
+- Make Agent Integration URLs environment-aware: the UI now infers the current site origin (instead of hardcoding production), so preview/local deployments copy the correct `/api/*` + `/skill.md` links.
+
 ## 0.2.26 — 2026-01-31
 
 - Add timeout-specific counts to status APIs so dashboards/agents can distinguish timeouts from other failures:
