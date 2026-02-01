@@ -6,6 +6,7 @@ import StatusHistory, {
   useStatusHistory,
 } from "./components/StatusHistory";
 import ReliabilitySummary from "./components/ReliabilitySummary";
+import IncidentSummary from "./components/IncidentSummary";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -403,6 +404,9 @@ export default function StatusCard() {
 
       {/* Reliability Summary (client-side, based on local history) */}
       <ReliabilitySummary history={history} />
+
+      {/* Incident Summary (derived from local history) */}
+      <IncidentSummary history={history} />
 
       {/* Filters */}
       <div className="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-4">

@@ -1,5 +1,9 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.16 — 2026-01-31
+
+- Add a new “Recent Incidents” section that groups contiguous degraded checks into incident windows with approximate duration and most-impacted endpoints (derived from local browser history).
+
 ## 0.2.15 — 2026-01-31
 
 - Add paste-friendly output formats to `/api/agent-check` via `?format=text|markdown` (default JSON), making it easier for agents/humans to log actionable status without JSON parsing.
