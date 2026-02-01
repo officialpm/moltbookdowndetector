@@ -1,5 +1,10 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.33 — 2026-01-31
+
+- Fix authenticated probe semantics: `/api/check` now treats 401/403 as failures for auth-required endpoints (surfaces missing/invalid `MOLTBOOK_API_KEY` instead of reporting a false-positive OK).
+- Sync `public/skill.md` version with package version.
+
 ## 0.2.32 — 2026-01-31
 
 - Add category-level reliability breakdown on the dashboard (site/api/docs/auth) by persisting endpoint category in local probe history.

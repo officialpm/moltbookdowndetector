@@ -174,7 +174,13 @@ export async function performProbe(userAgent: string): Promise<ProbeResponse> {
         );
 
         const ms = Date.now() - s;
-        const ok = res.ok || res.status === 401 || res.status === 403;
+
+        // Treat auth endpoints strictly: 401/403 means the API key is missing/invalid,
+        // which is exactly what we want to surface for reliability.
+        // For public endpoints, a 401/403 can still be a useful "reachable" signal.
+        const ok = t.requiresAuth
+          ? res.ok
+          : res.ok || res.status === 401 || res.status === 403;
 
         return {
           name: t.name,
