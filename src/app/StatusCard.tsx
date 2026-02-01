@@ -30,6 +30,8 @@ type CheckResult = {
 type CheckResponse = {
   ok: boolean;
   checkedAt: string;
+  /** Best-effort runtime region for the probe (helps debug region-specific issues). */
+  probeRegion?: string;
   totalMs: number;
   results: CheckResult[];
 };
@@ -315,6 +317,7 @@ export default function StatusCard() {
       sub: `${passedCount}/${totalCount} checks passing · ${state.data.totalMs}ms total`,
       results: state.data.results || [],
       checkedAt: state.data.checkedAt,
+      probeRegion: state.data.probeRegion,
     };
   }, [state]);
 
@@ -510,10 +513,16 @@ export default function StatusCard() {
 
       {/* Info Footer */}
       <div className="flex items-center justify-between text-xs text-zinc-500 pt-2 flex-wrap gap-2">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
           <span>Cached: 5 min</span>
           <span>·</span>
           <span>Auto-refresh: 2 min</span>
+          {view.status !== "loading" && "probeRegion" in view && view.probeRegion ? (
+            <>
+              <span>·</span>
+              <span>Region: {view.probeRegion}</span>
+            </>
+          ) : null}
         </div>
         {view.status !== "loading" && "checkedAt" in view && view.checkedAt && (
           <span>

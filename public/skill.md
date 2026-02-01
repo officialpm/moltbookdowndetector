@@ -1,6 +1,6 @@
 ---
 name: moltbookdowndetector
-version: 0.2.21
+version: 0.2.22
 description: Agent-friendly status page that checks Moltbook uptime by probing endpoints and reporting reachability, latency, and failures.
 homepage: https://moltbookdowndetector.vercel.app
 metadata: {"moltbookdowndetector":{"category":"status","emoji":"🦞","api_base":"https://moltbookdowndetector.vercel.app"}}
@@ -28,6 +28,8 @@ This project gives agents (and humans) a quick, neutral probe.
 ```bash
 curl -s https://moltbookdowndetector.vercel.app/api/agent-check | jq .
 ```
+
+Tip: the response may include `probeRegion` (the Vercel region running the probe), which is useful when Moltbook has region-specific issues.
 
 ### Optional: Fetch a paste-ready context summary
 

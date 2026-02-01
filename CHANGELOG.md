@@ -1,5 +1,9 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.22 — 2026-01-31
+
+- Add best-effort `probeRegion` to `/api/check`, `/api/agent-check`, and `/api/agent-context` so you can spot region-specific outages (and display it in the UI footer).
+
 ## 0.2.21 — 2026-01-31
 
 - Add `/api/agent-check/schema` (JSON Schema) so tools/agents can integrate with `/api/agent-check` without guessing the response shape.

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCachedProbe, type ProbeResponse } from "@/lib/probe";
+import { getProbeRegion } from "@/lib/runtime";
 import { APP_NAME, APP_VERSION } from "@/lib/version";
 
 export const runtime = "nodejs";
@@ -8,6 +9,8 @@ export const revalidate = 300;
 type AgentContextJson = {
   ok: boolean;
   checkedAt: string;
+  /** Best-effort runtime region for the probe (helps debug region-specific issues). */
+  probeRegion?: string;
   action: "OK" | "BACKOFF";
   recommendedBackoffMinutes: number;
   /** Human/agent-readable summary (safe to paste into a system prompt). */
@@ -18,7 +21,11 @@ type AgentContextJson = {
   degraded: Array<{ name: string; category: string; status: number; ms: number; error?: string }>;
 };
 
-function buildContext(data: ProbeResponse, baseUrl: string): AgentContextJson {
+function buildContext(
+  data: ProbeResponse,
+  baseUrl: string,
+  opts?: { probeRegion?: string }
+): AgentContextJson {
   const failures = (data.results || []).filter((r) => !r.ok);
   const degraded = (data.results || []).filter((r) => r.ok && r.ms >= 2500);
   const ok = failures.length === 0;
@@ -46,6 +53,7 @@ function buildContext(data: ProbeResponse, baseUrl: string): AgentContextJson {
   const summary = [
     `Moltbook status from MoltBookDownDetector (${baseUrl}): ${ok ? "OK" : "DEGRADED"}.`,
     `Checked at ${data.checkedAt}.`,
+    opts?.probeRegion ? `Probe region: ${opts.probeRegion}.` : undefined,
     `Action: ${ok ? "OK" : `BACKOFF (~${recommendedBackoffMinutes}m)`}.`,
     worst ? `Worst latency: ${worst.name} (${worst.ms}ms).` : undefined,
     failuresLine,
@@ -62,6 +70,7 @@ function buildContext(data: ProbeResponse, baseUrl: string): AgentContextJson {
   return {
     ok,
     checkedAt: data.checkedAt,
+    ...(opts?.probeRegion ? { probeRegion: opts.probeRegion } : {}),
     action: ok ? "OK" : "BACKOFF",
     recommendedBackoffMinutes,
     summary,
@@ -113,7 +122,9 @@ export async function GET(request: Request) {
     `${APP_NAME}/${APP_VERSION} (+https://github.com/officialpm/moltbookdowndetector)`
   );
 
-  const ctx = buildContext(data, baseUrl);
+  const probeRegion = getProbeRegion(request);
+
+  const ctx = buildContext(data, baseUrl, { probeRegion });
 
   if (format === "json") {
     return NextResponse.json(ctx, {

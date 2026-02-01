@@ -21,6 +21,11 @@ export async function GET() {
     properties: {
       ok: { type: "boolean" },
       checkedAt: { type: "string", description: "ISO timestamp" },
+      probeRegion: {
+        type: "string",
+        description:
+          "Best-effort runtime region for the probe (helps debug region-specific issues).",
+      },
       scope: {
         type: "object",
         additionalProperties: false,
@@ -107,6 +112,7 @@ export async function GET() {
   const example = {
     ok: true,
     checkedAt: new Date().toISOString(),
+    probeRegion: "sfo1",
     totalProbes: 8,
     totalFailures: 0,
     totalDegraded: 1,

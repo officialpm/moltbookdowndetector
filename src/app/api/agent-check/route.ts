@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCachedProbe, type CheckResult, type ProbeResponse } from "@/lib/probe";
+import { getProbeRegion } from "@/lib/runtime";
 import { APP_NAME, APP_VERSION } from "@/lib/version";
 
 export const runtime = "nodejs";
@@ -8,6 +9,8 @@ export const revalidate = 300;
 export type AgentCheckResponse = {
   ok: boolean;
   checkedAt: string;
+  /** Best-effort runtime region for the probe (helps debug region-specific issues). */
+  probeRegion?: string;
   /**
    * Optional scope when the caller requests a subset of probes.
    * Example: /api/agent-check?category=api or /api/agent-check?name=Posts%20Feed
@@ -48,7 +51,7 @@ const DEGRADED_THRESHOLD_MS = 2500;
 
 function toAgentResponse(
   data: ProbeResponse,
-  opts?: { category?: string; name?: string }
+  opts?: { category?: string; name?: string; probeRegion?: string }
 ): AgentCheckResponse {
   const filtered = (data.results || []).filter((r) => {
     if (opts?.category && r.category !== opts.category) return false;
@@ -90,6 +93,7 @@ function toAgentResponse(
   return {
     ok,
     checkedAt: data.checkedAt,
+    ...(opts?.probeRegion ? { probeRegion: opts.probeRegion } : {}),
     ...(scope ? { scope } : {}),
 
     totalProbes: filtered.length,
@@ -212,7 +216,9 @@ export async function GET(request: Request) {
     `${APP_NAME}/${APP_VERSION} (+https://github.com/officialpm/moltbookdowndetector)`
   );
 
-  const resp = toAgentResponse(data, { category, name });
+  const probeRegion = getProbeRegion(request);
+
+  const resp = toAgentResponse(data, { category, name, probeRegion });
 
   // If the caller asked for a scope that doesn't exist, fail loudly so agents
   // don't accidentally treat "empty list" as healthy.
