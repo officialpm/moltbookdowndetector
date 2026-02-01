@@ -1,5 +1,12 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.36 — 2026-01-31
+
+- Add `/api/health` endpoint for uptime monitors/agents that prefer status codes:
+  - Returns HTTP 200 when OK and HTTP 503 when BACKOFF.
+  - Supports `?category=...` / `?name=...` scoping and `?format=json`.
+  - Documented in OpenAPI + skill.md.
+
 ## 0.2.35 — 2026-01-31
 
 - Make endpoint cards deep-linkable + more informative:

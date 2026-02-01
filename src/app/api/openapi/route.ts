@@ -315,6 +315,75 @@ export async function GET(request: Request) {
         },
       },
 
+      "/api/health": {
+        get: {
+          tags: ["agent", "status"],
+          summary: "Uptime-monitor style health check",
+          description:
+            "Returns HTTP 200 when healthy and HTTP 503 when Moltbook is degraded (based on the latest cached probes). Useful for basic uptime monitors and agent runtimes that only look at status codes.",
+          parameters: [
+            {
+              name: "category",
+              in: "query",
+              required: false,
+              schema: { type: "string", enum: ["site", "api", "docs", "auth"] },
+              description: "Limit probes to a single category.",
+            },
+            {
+              name: "name",
+              in: "query",
+              required: false,
+              schema: { type: "string" },
+              description:
+                "Limit probes to a single endpoint by its display name (URL-encode spaces).",
+            },
+            {
+              name: "format",
+              in: "query",
+              required: false,
+              schema: { type: "string", enum: ["text", "json"] },
+              description: "Response format. Defaults to plain text.",
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Healthy (OK)",
+              content: {
+                "text/plain": { schema: { type: "string" } },
+                "application/json": {
+                  schema: { type: "object" },
+                },
+              },
+            },
+            "503": {
+              description: "Unhealthy (BACKOFF)",
+              content: {
+                "text/plain": { schema: { type: "string" } },
+                "application/json": {
+                  schema: { type: "object" },
+                },
+              },
+            },
+            "400": {
+              description: "Invalid query (e.g. unsupported category)",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/ErrorResponse" },
+                },
+              },
+            },
+            "404": {
+              description: "Scope requested but no matching probes exist",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/ErrorResponse" },
+                },
+              },
+            },
+          },
+        },
+      },
+
       "/api/metrics": {
         get: {
           tags: ["status"],

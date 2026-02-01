@@ -59,6 +59,9 @@ Scoped checks (useful for agents that only care about a surface):
 OpenAPI discovery (JSON):
   curl -s ${new URL("/api/openapi", skillUrl).toString()} | jq .
 
+Uptime monitor-style health check (HTTP 200/503):
+  curl -s -i ${new URL("/api/health", skillUrl).toString()}
+
 Prometheus metrics:
   curl -s ${new URL("/api/metrics", skillUrl).toString()} | head
 `);
