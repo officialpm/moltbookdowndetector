@@ -53,6 +53,9 @@ export default function EndpointStatsTable({
   maxEndpoints?: number;
 }) {
   const [sort, setSort] = useState<"failRate" | "p95" | "name">("failRate");
+  const [category, setCategory] = useState<Category | "all">("all");
+  const [q, setQ] = useState("");
+  const [onlyIssues, setOnlyIssues] = useState(false);
 
   const latestByName = useMemo(() => {
     const m = new Map<string, CheckResult>();
@@ -114,7 +117,26 @@ export default function EndpointStatsTable({
 
     const failRate = (x: EndpointAgg) => (x.n ? x.fail / x.n : 0);
 
-    out.sort((a, b) => {
+    const query = q.trim().toLowerCase();
+    const filtered = out.filter((x) => {
+      if (category !== "all" && x.category && x.category !== category) return false;
+      if (category !== "all" && !x.category) return false;
+
+      if (query) {
+        const hay = `${x.name} ${x.path || ""}`.toLowerCase();
+        if (!hay.includes(query)) return false;
+      }
+
+      if (onlyIssues) {
+        const latest = latestByName.get(x.name);
+        const hasIssue = x.fail > 0 || latest?.ok === false;
+        if (!hasIssue) return false;
+      }
+
+      return true;
+    });
+
+    filtered.sort((a, b) => {
       if (sort === "name") return a.name.localeCompare(b.name);
       if (sort === "p95") return b.p95Ms - a.p95Ms;
       // failRate
@@ -123,8 +145,8 @@ export default function EndpointStatsTable({
       return b.p95Ms - a.p95Ms;
     });
 
-    return out.slice(0, maxEndpoints);
-  }, [history, latestByName, maxEndpoints, sort]);
+    return filtered.slice(0, maxEndpoints);
+  }, [history, latestByName, maxEndpoints, sort, category, q, onlyIssues]);
 
   if (!history.length) return null;
 
@@ -138,7 +160,37 @@ export default function EndpointStatsTable({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap justify-end">
+          <label className="flex items-center gap-2 text-xs text-zinc-500">
+            <input
+              type="checkbox"
+              checked={onlyIssues}
+              onChange={(e) => setOnlyIssues(e.target.checked)}
+              className="h-3 w-3 accent-amber-500"
+            />
+            Only issues
+          </label>
+
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value as typeof category)}
+            className="rounded-lg border border-zinc-800 bg-zinc-950/40 px-2 py-1 text-xs text-zinc-200"
+            aria-label="Filter category"
+          >
+            <option value="all">All categories</option>
+            <option value="site">site</option>
+            <option value="api">api</option>
+            <option value="docs">docs</option>
+            <option value="auth">auth</option>
+          </select>
+
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search endpoints…"
+            className="w-44 rounded-lg border border-zinc-800 bg-zinc-950/40 px-2 py-1 text-xs text-zinc-200 placeholder:text-zinc-600"
+          />
+
           <span className="text-xs text-zinc-500">Sort</span>
           <select
             value={sort}

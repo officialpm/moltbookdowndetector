@@ -1,5 +1,9 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.18 — 2026-01-31
+
+- Add issue-focused controls to the local Endpoint stats table: category filter, endpoint search, and an “Only issues” toggle to quickly isolate flaky surfaces.
+
 ## 0.2.17 — 2026-01-31
 
 - Add an endpoint stats table (failure rate + p95/avg latency + last OK/fail) derived from local browser history so you can quickly spot flaky or slow surfaces.
