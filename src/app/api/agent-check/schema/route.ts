@@ -22,6 +22,11 @@ function agentCheckResponseSchema(): JsonSchema {
     required: [
       "ok",
       "checkedAt",
+      "totalProbes",
+      "totalFailures",
+      "totalDegraded",
+      "degradedThresholdMs",
+      "byCategory",
       "action",
       "recommendedBackoffMinutes",
       "failures",
@@ -43,6 +48,39 @@ function agentCheckResponseSchema(): JsonSchema {
         },
         description:
           "Optional scope if the caller requested a subset via ?category= or ?name=",
+      },
+      totalProbes: {
+        type: "number",
+        description: "How many probes were evaluated after applying any requested scope",
+      },
+      totalFailures: {
+        type: "number",
+        description: "How many probes are failing (ok=false)",
+      },
+      totalDegraded: {
+        type: "number",
+        description:
+          "How many probes are considered degraded (ok=true but slow based on degradedThresholdMs)",
+      },
+      degradedThresholdMs: {
+        type: "number",
+        description: "Latency threshold used to classify degraded probes",
+      },
+      byCategory: {
+        type: "object",
+        additionalProperties: {
+          type: "object",
+          additionalProperties: false,
+          required: ["total", "failures", "degraded", "ok"],
+          properties: {
+            total: { type: "number" },
+            failures: { type: "number" },
+            degraded: { type: "number" },
+            ok: { type: "boolean" },
+          },
+        },
+        description:
+          "Category-level summary counts for the scoped probe set (keys typically: site|api|docs|auth)",
       },
       action: { type: "string", enum: ["OK", "BACKOFF"] },
       recommendedBackoffMinutes: {
@@ -91,6 +129,15 @@ function exampleResponse(): AgentCheckResponse {
     ok: false,
     checkedAt: new Date(0).toISOString(),
     scope: { category: "api" },
+
+    totalProbes: 3,
+    totalFailures: 1,
+    totalDegraded: 1,
+    degradedThresholdMs: 2500,
+    byCategory: {
+      api: { total: 3, failures: 1, degraded: 1, ok: false },
+    },
+
     action: "BACKOFF",
     recommendedBackoffMinutes: 20,
     failures: [
@@ -103,7 +150,16 @@ function exampleResponse(): AgentCheckResponse {
         url: "https://www.moltbook.com/api/v1/posts?sort=new&limit=1",
       },
     ],
-    degraded: [],
+    degraded: [
+      {
+        name: "Post Detail",
+        category: "api",
+        status: 200,
+        error: undefined,
+        ms: 3800,
+        url: "https://www.moltbook.com/api/v1/posts/abc123",
+      },
+    ],
   };
 }
 

@@ -16,6 +16,24 @@ export type AgentCheckResponse = {
     category?: string;
     name?: string;
   };
+
+  /**
+   * Summary fields so agents can make quick decisions without iterating arrays.
+   */
+  totalProbes: number;
+  totalFailures: number;
+  totalDegraded: number;
+  degradedThresholdMs: number;
+  byCategory: Record<
+    string,
+    {
+      total: number;
+      failures: number;
+      degraded: number;
+      ok: boolean;
+    }
+  >;
+
   action: "OK" | "BACKOFF";
   recommendedBackoffMinutes: number;
   failures: Array<
@@ -25,6 +43,8 @@ export type AgentCheckResponse = {
     Pick<CheckResult, "name" | "category" | "status" | "error" | "ms" | "url">
   >;
 };
+
+const DEGRADED_THRESHOLD_MS = 2500;
 
 function toAgentResponse(
   data: ProbeResponse,
@@ -39,7 +59,28 @@ function toAgentResponse(
   const failures = filtered.filter((r) => !r.ok);
 
   // "Degraded" heuristic: slow but successful endpoints (p95 would be better; keep it simple)
-  const degraded = filtered.filter((r) => r.ok && r.ms >= 2500);
+  const degraded = filtered.filter((r) => r.ok && r.ms >= DEGRADED_THRESHOLD_MS);
+
+  const byCategory: AgentCheckResponse["byCategory"] = {};
+  for (const r of filtered) {
+    const key = r.category || "unknown";
+    const prev = byCategory[key] || {
+      total: 0,
+      failures: 0,
+      degraded: 0,
+      ok: true,
+    };
+    const isFailure = !r.ok;
+    const isDegraded = r.ok && r.ms >= DEGRADED_THRESHOLD_MS;
+
+    const next = {
+      total: prev.total + 1,
+      failures: prev.failures + (isFailure ? 1 : 0),
+      degraded: prev.degraded + (isDegraded ? 1 : 0),
+      ok: prev.ok && !isFailure,
+    };
+    byCategory[key] = next;
+  }
 
   const ok = failures.length === 0;
   const recommendedBackoffMinutes = ok ? 0 : 20;
@@ -50,6 +91,13 @@ function toAgentResponse(
     ok,
     checkedAt: data.checkedAt,
     ...(scope ? { scope } : {}),
+
+    totalProbes: filtered.length,
+    totalFailures: failures.length,
+    totalDegraded: degraded.length,
+    degradedThresholdMs: DEGRADED_THRESHOLD_MS,
+    byCategory,
+
     action: ok ? "OK" : "BACKOFF",
     recommendedBackoffMinutes,
     failures: failures.map((r) => ({
@@ -87,12 +135,12 @@ function toPlainText(resp: AgentCheckResponse): string {
     const degradedNote = resp.degraded.length
       ? `; degraded: ${resp.degraded.map((d) => d.name).join(", ")}`
       : "";
-    return `OK${scope} — checkedAt=${resp.checkedAt}${degradedNote}`;
+    return `OK${scope} — checkedAt=${resp.checkedAt} — probes=${resp.totalProbes}, failures=${resp.totalFailures}, degraded=${resp.totalDegraded}${degradedNote}`;
   }
 
   const lines: string[] = [];
   lines.push(
-    `BACKOFF${scope} — checkedAt=${resp.checkedAt} — backoff=${resp.recommendedBackoffMinutes}m`
+    `BACKOFF${scope} — checkedAt=${resp.checkedAt} — probes=${resp.totalProbes}, failures=${resp.totalFailures}, degraded=${resp.totalDegraded} — backoff=${resp.recommendedBackoffMinutes}m`
   );
 
   if (resp.failures.length) {
@@ -123,7 +171,7 @@ function toMarkdown(resp: AgentCheckResponse): string {
           .map((d) => `- ${d.name} (${d.ms}ms)`)
           .join("\n")}`
       : "";
-    return `**OK**${scope}\n\n- checkedAt: ${resp.checkedAt}${degradedNote}`;
+    return `**OK**${scope}\n\n- checkedAt: ${resp.checkedAt}\n- probes: ${resp.totalProbes}\n- failures: ${resp.totalFailures}\n- degraded: ${resp.totalDegraded}${degradedNote}`;
   }
 
   const failures = resp.failures.length
@@ -141,7 +189,7 @@ function toMarkdown(resp: AgentCheckResponse): string {
         .join("\n")}`
     : "";
 
-  return `**BACKOFF**${scope}\n\n- checkedAt: ${resp.checkedAt}\n- recommendedBackoffMinutes: ${resp.recommendedBackoffMinutes}${failures}${degraded}`;
+  return `**BACKOFF**${scope}\n\n- checkedAt: ${resp.checkedAt}\n- probes: ${resp.totalProbes}\n- failures: ${resp.totalFailures}\n- degraded: ${resp.totalDegraded}\n- recommendedBackoffMinutes: ${resp.recommendedBackoffMinutes}${failures}${degraded}`;
 }
 
 export async function GET(request: Request) {

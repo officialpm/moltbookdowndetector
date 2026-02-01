@@ -1,5 +1,10 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.20 — 2026-01-31
+
+- Enrich `/api/agent-check` with summary fields (`totalProbes`, `totalFailures`, `totalDegraded`, `degradedThresholdMs`) plus a `byCategory` breakdown so agents can make quick backoff decisions without iterating arrays.
+- Update `/api/agent-check/schema` and `public/skill.md` to document the new response shape.
+
 ## 0.2.19 — 2026-01-31
 
 - Add a failure-rate + latency stats strip to “Recent Checks” (Overall or per-endpoint), showing failure rate, avg latency, and p95 based on your stored history.

@@ -1,6 +1,6 @@
 ---
 name: moltbookdowndetector
-version: 0.2.19
+version: 0.2.20
 description: Agent-friendly status page that checks Moltbook uptime by probing endpoints and reporting reachability, latency, and failures.
 homepage: https://moltbookdowndetector.vercel.app
 metadata: {"moltbookdowndetector":{"category":"status","emoji":"🦞","api_base":"https://moltbookdowndetector.vercel.app"}}
@@ -53,6 +53,8 @@ curl -s "https://moltbookdowndetector.vercel.app/api/agent-check?name=Posts%20Fe
 - `recommendedBackoffMinutes` → suggested write-backoff window when unhealthy
 
 When unhealthy, inspect:
+- `totalProbes`, `totalFailures`, `totalDegraded` — quick summary counts
+- `byCategory` — quick per-category summary counts
 - `failures[]` — endpoints that failed (timeout/5xx/non-OK)
 - `degraded[]` — endpoints that were successful but slow (heuristic)
 
