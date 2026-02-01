@@ -1,5 +1,11 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.34 — 2026-01-31
+
+- Add shareable deep links for debugging reliability:
+  - Endpoint stats table now syncs filters to URL query params (category/q/sort/issues).
+  - Clicking an endpoint name deep-links into the “Recent Checks” endpoint view via `?endpoint=...`.
+
 ## 0.2.33 — 2026-01-31
 
 - Fix authenticated probe semantics: `/api/check` now treats 401/403 as failures for auth-required endpoints (surfaces missing/invalid `MOLTBOOK_API_KEY` instead of reporting a false-positive OK).

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { HistoryEntry } from "./StatusHistory";
 
 type Category = "site" | "api" | "docs" | "auth";
@@ -55,10 +56,55 @@ export default function EndpointStatsTable({
   latestResults: CheckResult[];
   maxEndpoints?: number;
 }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [sort, setSort] = useState<"failRate" | "p95" | "name">("failRate");
   const [category, setCategory] = useState<Category | "all">("all");
   const [q, setQ] = useState("");
   const [onlyIssues, setOnlyIssues] = useState(false);
+
+  // Hydrate filters from URL so the table can be deep-linked.
+  useEffect(() => {
+    const sp = searchParams;
+    if (!sp) return;
+
+    const urlSort = sp.get("sort");
+    if (urlSort === "failRate" || urlSort === "p95" || urlSort === "name") setSort(urlSort);
+
+    const urlCategory = sp.get("category");
+    if (urlCategory === "all" || urlCategory === "site" || urlCategory === "api" || urlCategory === "docs" || urlCategory === "auth") {
+      setCategory(urlCategory);
+    }
+
+    const urlQ = sp.get("q");
+    if (typeof urlQ === "string") setQ(urlQ);
+
+    const urlIssues = sp.get("issues");
+    if (urlIssues === "1" || urlIssues === "true") setOnlyIssues(true);
+    if (urlIssues === "0" || urlIssues === "false") setOnlyIssues(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Keep URL updated when filters change (shareable links).
+  useEffect(() => {
+    const sp = new URLSearchParams(searchParams?.toString() || "");
+
+    if (sort && sort !== "failRate") sp.set("sort", sort);
+    else sp.delete("sort");
+
+    if (category && category !== "all") sp.set("category", category);
+    else sp.delete("category");
+
+    if (q.trim()) sp.set("q", q.trim());
+    else sp.delete("q");
+
+    if (onlyIssues) sp.set("issues", "1");
+    else sp.delete("issues");
+
+    const qs = sp.toString();
+    router.replace(qs ? `/?${qs}` : "/");
+  }, [router, searchParams, sort, category, q, onlyIssues]);
 
   const latestByName = useMemo(() => {
     const m = new Map<string, CheckResult>();
@@ -244,7 +290,17 @@ export default function EndpointStatsTable({
               return (
                 <tr key={r.name} className="border-t border-zinc-800/60">
                   <td className="py-2 pr-4">
-                    <div className="text-zinc-200 font-medium">{r.name}</div>
+                    <a
+                      className="text-zinc-200 font-medium hover:underline"
+                      href={`/?${(() => {
+                        const sp = new URLSearchParams(searchParams?.toString() || "");
+                        sp.set("endpoint", r.name);
+                        return sp.toString();
+                      })()}`}
+                      title="Deep link to endpoint view"
+                    >
+                      {r.name}
+                    </a>
                     <div className="text-[11px] text-zinc-600 truncate max-w-[520px]">
                       {r.path || "—"}
                     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export type HistoryProbeResult = {
   name: string;
@@ -167,7 +168,19 @@ export default function StatusHistory({
     return [...s].sort((a, b) => a.localeCompare(b));
   }, [history]);
 
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [view, setView] = useState<ViewMode>({ kind: "overall" });
+
+  // Hydrate the endpoint view from the URL (shareable deep links).
+  useEffect(() => {
+    const sp = searchParams;
+    if (!sp) return;
+    const endpoint = sp.get("endpoint");
+    if (endpoint) setView({ kind: "endpoint", endpointName: endpoint });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const effectiveView = useMemo<ViewMode>(() => {
     if (view.kind === "endpoint") {
@@ -176,6 +189,16 @@ export default function StatusHistory({
     }
     return view;
   }, [endpointNames, view]);
+
+  // Keep URL in sync when switching between overall/endpoint view.
+  useEffect(() => {
+    const sp = new URLSearchParams(searchParams?.toString() || "");
+    if (effectiveView.kind === "endpoint") sp.set("endpoint", effectiveView.endpointName);
+    else sp.delete("endpoint");
+
+    const qs = sp.toString();
+    router.replace(qs ? `/?${qs}` : "/");
+  }, [router, searchParams, effectiveView]);
 
   const stats = useMemo(() => {
     const data = history
