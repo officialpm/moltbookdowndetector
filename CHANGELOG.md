@@ -1,5 +1,10 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.25 — 2026-01-31
+
+- Add `/api/status`, a dashboard-friendly status JSON endpoint (overall + per-category totals + full per-endpoint results).
+- Link to `/api/status` from the homepage nav and document it in `public/skill.md`.
+
 ## 0.2.24 — 2026-01-31
 
 - Add `authEnabled` + `authProbesIncluded` to `/api/check` and `/api/agent-check`, and surface a UI warning when authenticated probes are disabled (no `MOLTBOOK_API_KEY`).

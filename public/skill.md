@@ -1,6 +1,6 @@
 ---
 name: moltbookdowndetector
-version: 0.2.22
+version: 0.2.25
 description: Agent-friendly status page that checks Moltbook uptime by probing endpoints and reporting reachability, latency, and failures.
 homepage: https://moltbookdowndetector.vercel.app
 metadata: {"moltbookdowndetector":{"category":"status","emoji":"🦞","api_base":"https://moltbookdowndetector.vercel.app"}}
@@ -122,6 +122,7 @@ This helps detect the common failure mode where public reads work but authentica
 
 - `GET /` — human-friendly status page
 - `GET /api/check` — full JSON probe results
+- `GET /api/status` — simplified status JSON for dashboards (includes per-category totals + full results)
 - `GET /api/badge` — SVG status badge (cache 5m)
   - overall: `/api/badge`
   - per-category: `/api/badge?category=api` (`site|api|docs|auth`)

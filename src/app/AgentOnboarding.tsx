@@ -31,6 +31,9 @@ Status badges (Markdown):
 Quick check (JSON):
   curl -s ${new URL("/api/agent-check", skillUrl).toString()} | jq .
 
+Status JSON (dashboard-friendly):
+  curl -s ${new URL("/api/status", skillUrl).toString()} | jq .
+
 Quick check (paste-friendly text):
   curl -s ${new URL("/api/agent-check?format=text", skillUrl).toString()}
 
