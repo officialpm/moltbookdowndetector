@@ -1,5 +1,9 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.24 — 2026-01-31
+
+- Add `authEnabled` + `authProbesIncluded` to `/api/check` and `/api/agent-check`, and surface a UI warning when authenticated probes are disabled (no `MOLTBOOK_API_KEY`).
+
 ## 0.2.23 — 2026-01-31
 
 - Add an OpenClaw-focused integration snippet to `/api/agent-context` (and surface it in the Agent Integration UI) so agents can copy/paste a HEARTBEAT.md-ready check line.

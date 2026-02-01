@@ -11,6 +11,11 @@ export type AgentCheckResponse = {
   checkedAt: string;
   /** Best-effort runtime region for the probe (helps debug region-specific issues). */
   probeRegion?: string;
+
+  /** Whether authenticated probes were included (requires MOLTBOOK_API_KEY). */
+  authEnabled: boolean;
+  /** How many authenticated probes were included in this run. */
+  authProbesIncluded: number;
   /**
    * Optional scope when the caller requests a subset of probes.
    * Example: /api/agent-check?category=api or /api/agent-check?name=Posts%20Feed
@@ -94,6 +99,10 @@ function toAgentResponse(
     ok,
     checkedAt: data.checkedAt,
     ...(opts?.probeRegion ? { probeRegion: opts.probeRegion } : {}),
+
+    authEnabled: data.authEnabled,
+    authProbesIncluded: data.authProbesIncluded,
+
     ...(scope ? { scope } : {}),
 
     totalProbes: filtered.length,
@@ -139,12 +148,14 @@ function toPlainText(resp: AgentCheckResponse): string {
     const degradedNote = resp.degraded.length
       ? `; degraded: ${resp.degraded.map((d) => d.name).join(", ")}`
       : "";
-    return `OK${scope} — checkedAt=${resp.checkedAt} — probes=${resp.totalProbes}, failures=${resp.totalFailures}, degraded=${resp.totalDegraded}${degradedNote}`;
+    const authNote = resp.authEnabled ? "auth=on" : "auth=off";
+    return `OK${scope} — checkedAt=${resp.checkedAt} — ${authNote} — probes=${resp.totalProbes}, failures=${resp.totalFailures}, degraded=${resp.totalDegraded}${degradedNote}`;
   }
 
   const lines: string[] = [];
+  const authNote = resp.authEnabled ? "auth=on" : "auth=off";
   lines.push(
-    `BACKOFF${scope} — checkedAt=${resp.checkedAt} — probes=${resp.totalProbes}, failures=${resp.totalFailures}, degraded=${resp.totalDegraded} — backoff=${resp.recommendedBackoffMinutes}m`
+    `BACKOFF${scope} — checkedAt=${resp.checkedAt} — ${authNote} — probes=${resp.totalProbes}, failures=${resp.totalFailures}, degraded=${resp.totalDegraded} — backoff=${resp.recommendedBackoffMinutes}m`
   );
 
   if (resp.failures.length) {
@@ -175,7 +186,7 @@ function toMarkdown(resp: AgentCheckResponse): string {
           .map((d) => `- ${d.name} (${d.ms}ms)`)
           .join("\n")}`
       : "";
-    return `**OK**${scope}\n\n- checkedAt: ${resp.checkedAt}\n- probes: ${resp.totalProbes}\n- failures: ${resp.totalFailures}\n- degraded: ${resp.totalDegraded}${degradedNote}`;
+    return `**OK**${scope}\n\n- checkedAt: ${resp.checkedAt}\n- authEnabled: ${resp.authEnabled}\n- authProbesIncluded: ${resp.authProbesIncluded}\n- probes: ${resp.totalProbes}\n- failures: ${resp.totalFailures}\n- degraded: ${resp.totalDegraded}${degradedNote}`;
   }
 
   const failures = resp.failures.length
@@ -193,7 +204,7 @@ function toMarkdown(resp: AgentCheckResponse): string {
         .join("\n")}`
     : "";
 
-  return `**BACKOFF**${scope}\n\n- checkedAt: ${resp.checkedAt}\n- probes: ${resp.totalProbes}\n- failures: ${resp.totalFailures}\n- degraded: ${resp.totalDegraded}\n- recommendedBackoffMinutes: ${resp.recommendedBackoffMinutes}${failures}${degraded}`;
+  return `**BACKOFF**${scope}\n\n- checkedAt: ${resp.checkedAt}\n- authEnabled: ${resp.authEnabled}\n- authProbesIncluded: ${resp.authProbesIncluded}\n- probes: ${resp.totalProbes}\n- failures: ${resp.totalFailures}\n- degraded: ${resp.totalDegraded}\n- recommendedBackoffMinutes: ${resp.recommendedBackoffMinutes}${failures}${degraded}`;
 }
 
 export async function GET(request: Request) {

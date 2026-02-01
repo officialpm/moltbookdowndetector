@@ -138,11 +138,17 @@ export type ProbeResponse = {
   checkedAt: string;
   totalMs: number;
   results: CheckResult[];
+
+  /** Whether authenticated probes were included (requires MOLTBOOK_API_KEY). */
+  authEnabled: boolean;
+  /** How many authenticated probes were included in this run. */
+  authProbesIncluded: number;
 };
 
 export async function performProbe(userAgent: string): Promise<ProbeResponse> {
   const startedAt = Date.now();
   const auth = moltbookAuthHeader();
+  const authEnabled = Boolean(auth);
 
   const allTargets: (CheckTarget & { requiresAuth?: boolean })[] = [
     ...publicTargets.map((t) => ({ ...t, requiresAuth: false })),
@@ -205,6 +211,8 @@ export async function performProbe(userAgent: string): Promise<ProbeResponse> {
     checkedAt: new Date().toISOString(),
     totalMs: Date.now() - startedAt,
     results,
+    authEnabled,
+    authProbesIncluded: authEnabled ? authTargets.length : 0,
   };
 }
 

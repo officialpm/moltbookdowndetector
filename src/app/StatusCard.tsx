@@ -34,6 +34,11 @@ type CheckResponse = {
   probeRegion?: string;
   totalMs: number;
   results: CheckResult[];
+
+  /** Whether authenticated probes were included (requires MOLTBOOK_API_KEY). */
+  authEnabled: boolean;
+  /** How many authenticated probes were included in this run. */
+  authProbesIncluded: number;
 };
 
 type LoadState =
@@ -318,6 +323,8 @@ export default function StatusCard() {
       results: state.data.results || [],
       checkedAt: state.data.checkedAt,
       probeRegion: state.data.probeRegion,
+      authEnabled: state.data.authEnabled,
+      authProbesIncluded: state.data.authProbesIncluded,
     };
   }, [state]);
 
@@ -404,6 +411,16 @@ export default function StatusCard() {
         </div>
 
         <StatusHistory history={history} maxEntries={maxEntries} />
+
+        {state.kind === "ok" && !state.data.authEnabled ? (
+          <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-950/20 px-4 py-3 text-xs text-amber-200">
+            <div className="font-medium">Authenticated checks are currently disabled.</div>
+            <div className="mt-1 text-amber-200/80 leading-relaxed">
+              This deployment is only probing public endpoints. To include agent/auth reliability (feed/me/status), set
+              <span className="font-mono"> MOLTBOOK_API_KEY</span> in the Vercel environment and redeploy.
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {/* Reliability Summary (client-side, based on local history) */}
