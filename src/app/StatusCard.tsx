@@ -11,7 +11,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import LatencyBar from "./components/LatencyBar";
 import RefreshButton from "./components/RefreshButton";
+import ExportDiagnosticsButton from "./components/ExportDiagnosticsButton";
 import StatusDot from "./components/StatusDot";
+import { APP_NAME, APP_VERSION } from "@/lib/version";
 
 type CheckResult = {
   name: string;
@@ -381,11 +383,19 @@ export default function StatusCard() {
               <p className="mt-1 text-sm text-zinc-400">{view.sub}</p>
             </div>
           </div>
-          <RefreshButton
-            onClick={doFetch}
-            loading={isRefreshing}
-            lastRefresh={lastRefresh}
-          />
+          <div className="flex items-center gap-2 flex-wrap">
+            <ExportDiagnosticsButton
+              appName={APP_NAME}
+              appVersion={APP_VERSION}
+              lastProbe={state.kind === "ok" ? state.data : undefined}
+              history={history}
+            />
+            <RefreshButton
+              onClick={doFetch}
+              loading={isRefreshing}
+              lastRefresh={lastRefresh}
+            />
+          </div>
         </div>
 
         <StatusHistory history={history} maxEntries={maxEntries} />

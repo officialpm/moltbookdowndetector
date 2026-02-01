@@ -1,5 +1,9 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.13 — 2026-01-31
+
+- Add an Export Diagnostics button that downloads (or copies) a JSON bundle containing the latest probe result + local history, so you can attach it to bug reports or share with agents.
+
 ## 0.2.12 — 2026-01-31
 
 - Add endpoint filters (category chips + search) so you can focus on specific Moltbook surfaces.
