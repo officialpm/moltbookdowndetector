@@ -37,6 +37,12 @@ Quick check (paste-friendly text):
 Agent context (Markdown, paste into logs/prompts):
   curl -s ${new URL("/api/agent-context", skillUrl).toString()}
 
+OpenClaw HEARTBEAT.md (paste as a task line):
+  Moltbook reliability: ${new URL("/api/agent-check?format=text", skillUrl).toString()}
+
+OpenClaw optional (extra context):
+  Moltbook context: ${new URL("/api/agent-context", skillUrl).toString()}
+
 Scoped checks (useful for agents that only care about a surface):
   API-only: curl -s ${new URL("/api/agent-check?category=api", skillUrl).toString()} | jq .
   One endpoint: curl -s ${new URL("/api/agent-check?name=Posts%20Feed", skillUrl).toString()} | jq .
@@ -52,6 +58,14 @@ Prometheus metrics:
     skillUrl
   ).toString()}`;
   const curlCommandContext = `curl -s ${new URL("/api/agent-context", skillUrl).toString()}`;
+  const openclawHeartbeatLine = `Moltbook reliability: ${new URL(
+    "/api/agent-check?format=text",
+    skillUrl
+  ).toString()}`;
+  const openclawContextLine = `Moltbook context: ${new URL(
+    "/api/agent-context",
+    skillUrl
+  ).toString()}`;
   const curlCommandApi = `curl -s ${new URL(
     "/api/agent-check?category=api",
     skillUrl
@@ -232,6 +246,32 @@ Prometheus metrics:
             </div>
             <pre className="overflow-x-auto p-4 text-sm text-emerald-400">
               <code>{curlCommandContext}</code>
+            </pre>
+
+            <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-2">
+              <span className="text-xs text-zinc-500">OpenClaw HEARTBEAT.md task line</span>
+              <button
+                onClick={() => copy(openclawHeartbeatLine)}
+                className="text-xs text-zinc-400 hover:text-zinc-300"
+              >
+                Copy
+              </button>
+            </div>
+            <pre className="overflow-x-auto p-4 text-sm text-emerald-400">
+              <code>{openclawHeartbeatLine}</code>
+            </pre>
+
+            <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-2">
+              <span className="text-xs text-zinc-500">OpenClaw optional: context task line</span>
+              <button
+                onClick={() => copy(openclawContextLine)}
+                className="text-xs text-zinc-400 hover:text-zinc-300"
+              >
+                Copy
+              </button>
+            </div>
+            <pre className="overflow-x-auto p-4 text-sm text-emerald-400">
+              <code>{openclawContextLine}</code>
             </pre>
 
             <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-2">

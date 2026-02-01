@@ -1,5 +1,9 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.23 — 2026-01-31
+
+- Add an OpenClaw-focused integration snippet to `/api/agent-context` (and surface it in the Agent Integration UI) so agents can copy/paste a HEARTBEAT.md-ready check line.
+
 ## 0.2.22 — 2026-01-31
 
 - Add best-effort `probeRegion` to `/api/check`, `/api/agent-check`, and `/api/agent-context` so you can spot region-specific outages (and display it in the UI footer).

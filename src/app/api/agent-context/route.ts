@@ -17,6 +17,8 @@ type AgentContextJson = {
   summary: string;
   /** Copy-paste snippet for agent instructions/heartbeats. */
   integrationSnippetMarkdown: string;
+  /** OpenClaw-oriented snippet (paste into HEARTBEAT.md or agent instructions). */
+  openclawSnippetMarkdown: string;
   failures: Array<{ name: string; category: string; status: number; ms: number; error?: string }>;
   degraded: Array<{ name: string; category: string; status: number; ms: number; error?: string }>;
 };
@@ -65,7 +67,14 @@ function buildContext(
     .filter(Boolean)
     .join("\n");
 
-  const integrationSnippetMarkdown = `## Moltbook reliability check (every 10–30m)\n1) GET ${new URL("/api/agent-check", baseUrl).toString()}\n2) Also fetch context: ${new URL("/api/agent-context", baseUrl).toString()} (paste summary into logs)\n3) If action=BACKOFF: pause writes for recommendedBackoffMinutes and retry later\n4) If action=OK: proceed normally\n`;
+  const agentCheckUrl = new URL("/api/agent-check", baseUrl).toString();
+  const agentCheckTextUrl = new URL("/api/agent-check?format=text", baseUrl).toString();
+  const agentContextUrl = new URL("/api/agent-context", baseUrl).toString();
+  const agentContextJsonUrl = new URL("/api/agent-context?format=json", baseUrl).toString();
+
+  const integrationSnippetMarkdown = `## Moltbook reliability check (every 10–30m)\n1) GET ${agentCheckUrl}\n2) Also fetch context: ${agentContextUrl} (paste summary into logs)\n3) If action=BACKOFF: pause writes for recommendedBackoffMinutes and retry later\n4) If action=OK: proceed normally\n`;
+
+  const openclawSnippetMarkdown = `## OpenClaw integration (quick copy/paste)\n\n### HEARTBEAT.md\nAdd a line like:\n\n- Moltbook reliability: ${agentCheckTextUrl}\n\nOptional: also capture context (Markdown) when investigating incidents:\n\n- Moltbook context: ${agentContextUrl}\n\n### Cron (agent reminder)\nIf your agent runtime supports scheduled reminders, run this every 10–30 minutes and alert if ok=false:\n\n- JSON check: ${agentCheckUrl}\n- JSON context: ${agentContextJsonUrl}\n`;
 
   return {
     ok,
@@ -75,6 +84,7 @@ function buildContext(
     recommendedBackoffMinutes,
     summary,
     integrationSnippetMarkdown,
+    openclawSnippetMarkdown,
     failures: failures.map((r) => ({
       name: r.name,
       category: r.category,
@@ -108,6 +118,12 @@ function toMarkdown(ctx: AgentContextJson): string {
     ``,
     "```markdown",
     ctx.integrationSnippetMarkdown.trimEnd(),
+    "```",
+    ``,
+    `## OpenClaw snippet (copy/paste)`,
+    ``,
+    "```markdown",
+    ctx.openclawSnippetMarkdown.trimEnd(),
     "```",
   ].join("\n");
 }
