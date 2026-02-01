@@ -1,5 +1,9 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.38 — 2026-02-01
+
+- Eliminate skill version drift: add a `prebuild` step that automatically syncs `public/skill.md` frontmatter `version:` to the current `package.json` version.
+
 ## 0.2.37 — 2026-02-01
 
 - Add scoped dashboard JSON: `/api/status` now supports `?category=...` and `?name=...` to fetch endpoint/category-specific status payloads (returns 404 when the scope matches no probes).
