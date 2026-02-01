@@ -11,6 +11,23 @@ type EndpointAgg = {
   failPct: number;
 };
 
+type CategoryAgg = {
+  category: string;
+  n: number;
+  fail: number;
+  timeouts: number;
+  avgMs: number;
+  failPct: number;
+  timeoutPct: number;
+};
+
+const categoryLabel: Record<string, string> = {
+  site: "🌐 Core Site",
+  api: "📡 Public API",
+  docs: "📚 Agent Docs",
+  auth: "🔐 Authenticated",
+};
+
 function computeAgg(history: HistoryEntry[]): EndpointAgg[] {
   const m = new Map<string, { n: number; fail: number; msSum: number }>();
 
@@ -35,6 +52,46 @@ function computeAgg(history: HistoryEntry[]): EndpointAgg[] {
   return out;
 }
 
+function computeCategoryAgg(history: HistoryEntry[]): CategoryAgg[] {
+  const m = new Map<
+    string,
+    { n: number; fail: number; timeouts: number; msSum: number }
+  >();
+
+  for (const entry of history) {
+    for (const r of entry.results || []) {
+      if (!r.category) continue;
+      const prev = m.get(r.category) || { n: 0, fail: 0, timeouts: 0, msSum: 0 };
+      const isFail = !r.ok;
+      const isTimeout = isFail && r.error === "timeout";
+      m.set(r.category, {
+        n: prev.n + 1,
+        fail: prev.fail + (isFail ? 1 : 0),
+        timeouts: prev.timeouts + (isTimeout ? 1 : 0),
+        msSum: prev.msSum + (Number.isFinite(r.ms) ? r.ms : 0),
+      });
+    }
+  }
+
+  const out: CategoryAgg[] = [];
+  for (const [category, v] of m.entries()) {
+    const avgMs = v.n ? Math.round(v.msSum / v.n) : 0;
+    const failPct = v.n ? Math.round((v.fail / v.n) * 100) : 0;
+    const timeoutPct = v.n ? Math.round((v.timeouts / v.n) * 100) : 0;
+    out.push({
+      category,
+      n: v.n,
+      fail: v.fail,
+      timeouts: v.timeouts,
+      avgMs,
+      failPct,
+      timeoutPct,
+    });
+  }
+
+  return out.sort((a, b) => a.category.localeCompare(b.category));
+}
+
 export default function ReliabilitySummary({
   history,
   minSamples = 6,
@@ -57,6 +114,8 @@ export default function ReliabilitySummary({
       .sort((a, b) => b.avgMs - a.avgMs || b.n - a.n)
       .slice(0, 4);
 
+    const categories = computeCategoryAgg(history);
+
     return {
       hasData: agg.length > 0,
       totalSamples,
@@ -64,6 +123,8 @@ export default function ReliabilitySummary({
       overallFailPct,
       flakiest,
       slowest,
+      categories,
+      hasCategoryData: categories.length > 0,
     };
   }, [history, minSamples]);
 
@@ -96,6 +157,46 @@ export default function ReliabilitySummary({
           </div>
         </div>
       </div>
+
+      {stats.hasCategoryData ? (
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {stats.categories.map((c) => {
+            const label = categoryLabel[c.category] || c.category;
+            const severity =
+              c.failPct === 0
+                ? "ok"
+                : c.failPct <= 5
+                  ? "warn"
+                  : "bad";
+
+            const badgeClass =
+              severity === "ok"
+                ? "bg-emerald-500/10 text-emerald-400"
+                : severity === "warn"
+                  ? "bg-amber-500/10 text-amber-400"
+                  : "bg-red-500/10 text-red-400";
+
+            return (
+              <div
+                key={c.category}
+                className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4"
+              >
+                <div className="text-xs font-medium text-zinc-400">{label}</div>
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <div className={`rounded-full px-2 py-1 text-sm font-semibold ${badgeClass}`}>
+                    {c.failPct}% fail
+                  </div>
+                  <div className="text-[11px] text-zinc-500">n={c.n}</div>
+                </div>
+                <div className="mt-2 text-[11px] text-zinc-500">
+                  Avg <span className="text-zinc-300">{c.avgMs}ms</span> · Timeouts{" "}
+                  <span className="text-zinc-300">{c.timeoutPct}%</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
 
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">

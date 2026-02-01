@@ -272,6 +272,7 @@ export default function StatusCard() {
         name: r.name,
         ok: r.ok,
         ms: r.ms,
+        category: r.category,
         status: r.status,
         ...(r.error ? { error: r.error } : {}),
       }));

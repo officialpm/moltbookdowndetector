@@ -6,6 +6,8 @@ export type HistoryProbeResult = {
   name: string;
   ok: boolean;
   ms: number;
+  /** Optional endpoint category (site|api|docs|auth). */
+  category?: string;
   /** HTTP status code (0 when fetch failed). */
   status?: number;
   /** Error string (e.g. "timeout") when fetch failed. */
@@ -40,10 +42,18 @@ function coerceHistoryEntry(x: unknown): HistoryEntry | null {
       const name = typeof rr.name === "string" ? rr.name : null;
       const rok = typeof rr.ok === "boolean" ? rr.ok : null;
       const ms = typeof rr.ms === "number" ? rr.ms : null;
+      const category = typeof rr.category === "string" ? rr.category : undefined;
       const status = typeof rr.status === "number" ? rr.status : undefined;
       const error = typeof rr.error === "string" ? rr.error : undefined;
       if (!name || rok === null || ms === null) return null;
-      return { name, ok: rok, ms, ...(typeof status === "number" ? { status } : {}), ...(error ? { error } : {}) };
+      return {
+        name,
+        ok: rok,
+        ms,
+        ...(category ? { category } : {}),
+        ...(typeof status === "number" ? { status } : {}),
+        ...(error ? { error } : {}),
+      };
     })
     .filter((r): r is HistoryProbeResult => Boolean(r));
 

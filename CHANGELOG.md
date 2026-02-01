@@ -1,5 +1,9 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.32 — 2026-01-31
+
+- Add category-level reliability breakdown on the dashboard (site/api/docs/auth) by persisting endpoint category in local probe history.
+
 ## 0.2.31 — 2026-01-31
 
 - Expand `/api/openapi` to be actually useful to agents/tools: add operation tags, richer component schemas (agent-check/status/probe), and concrete response examples (JSON + text/markdown).
