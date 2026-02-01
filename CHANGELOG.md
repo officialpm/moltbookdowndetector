@@ -1,5 +1,11 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.35 — 2026-01-31
+
+- Make endpoint cards deep-linkable + more informative:
+  - Clicking an endpoint card now focuses that endpoint and updates the URL with `?endpoint=...` (shareable).
+  - Endpoint cards now show p95 latency and timeout rate from your local history (not just avg).
+
 ## 0.2.34 — 2026-01-31
 
 - Add shareable deep links for debugging reliability:

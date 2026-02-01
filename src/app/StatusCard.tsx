@@ -46,6 +46,13 @@ type LoadState =
   | { kind: "ok"; data: CheckResponse }
   | { kind: "error"; message: string };
 
+function percentile(values: number[], p: number) {
+  if (!values.length) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const idx = Math.min(sorted.length - 1, Math.max(0, Math.ceil(p * sorted.length) - 1));
+  return sorted[idx] ?? 0;
+}
+
 async function fetchStatus(): Promise<CheckResponse> {
   const res = await fetch("/api/check", { cache: "no-store" });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -74,21 +81,32 @@ const categoryConfig = {
 type EndpointStats = {
   n: number;
   fail: number;
+  timeouts: number;
   avgMs: number;
+  p95Ms: number;
   lastFailAt?: string;
 };
 
 function computeEndpointStats(history: HistoryEntry[]): Map<string, EndpointStats> {
-  const m = new Map<string, { n: number; fail: number; msSum: number; lastFailAt?: string }>();
+  const m = new Map<
+    string,
+    { n: number; fail: number; timeouts: number; msSum: number; msArr: number[]; lastFailAt?: string }
+  >();
 
   for (const entry of history) {
     for (const r of entry.results || []) {
-      const prev = m.get(r.name) || { n: 0, fail: 0, msSum: 0 };
+      const prev = m.get(r.name) || { n: 0, fail: 0, timeouts: 0, msSum: 0, msArr: [] as number[] };
+      const ms = Number.isFinite(r.ms) ? r.ms : 0;
+      const isFailure = !r.ok;
+      const isTimeout = isFailure && r.error === "timeout";
+
       const next = {
         n: prev.n + 1,
-        fail: prev.fail + (r.ok ? 0 : 1),
-        msSum: prev.msSum + (Number.isFinite(r.ms) ? r.ms : 0),
-        lastFailAt: !r.ok ? entry.timestamp : prev.lastFailAt,
+        fail: prev.fail + (isFailure ? 1 : 0),
+        timeouts: prev.timeouts + (isTimeout ? 1 : 0),
+        msSum: prev.msSum + ms,
+        msArr: [...prev.msArr, ms],
+        lastFailAt: isFailure ? entry.timestamp : prev.lastFailAt,
       };
       m.set(r.name, next);
     }
@@ -99,7 +117,9 @@ function computeEndpointStats(history: HistoryEntry[]): Map<string, EndpointStat
     out.set(name, {
       n: v.n,
       fail: v.fail,
+      timeouts: v.timeouts,
       avgMs: v.n ? Math.round(v.msSum / v.n) : 0,
+      p95Ms: Math.round(percentile(v.msArr, 0.95)),
       lastFailAt: v.lastFailAt,
     });
   }
@@ -109,15 +129,25 @@ function computeEndpointStats(history: HistoryEntry[]): Map<string, EndpointStat
 function EndpointCard({
   r,
   stats,
+  focused,
+  onFocus,
 }: {
   r: CheckResult;
   stats?: EndpointStats;
+  focused?: boolean;
+  onFocus?: (name: string) => void;
 }) {
   const failPct = stats && stats.n ? Math.round((stats.fail / stats.n) * 100) : undefined;
 
   return (
-    <div
-      className={`group relative overflow-hidden rounded-xl border transition-all duration-300 hover:scale-[1.01] ${
+    <button
+      type="button"
+      onClick={() => onFocus?.(r.name)}
+      className={`group relative w-full text-left overflow-hidden rounded-xl border transition-all duration-300 hover:scale-[1.01] ${
+        focused
+          ? "ring-2 ring-emerald-500/40"
+          : ""
+      } ${
         r.ok
           ? "border-zinc-800 bg-zinc-900/40 hover:border-emerald-500/30 hover:bg-zinc-900/60"
           : "border-red-500/30 bg-red-950/20 hover:border-red-500/50"
@@ -137,7 +167,7 @@ function EndpointCard({
             </div>
             {stats && stats.n > 0 && (
               <div className="mt-1 text-[11px] text-zinc-500">
-                Recent: {failPct}% fail (n={stats.n}) · avg {stats.avgMs}ms
+                Recent: {failPct}% fail (n={stats.n}) · p95 {stats.p95Ms}ms · avg {stats.avgMs}ms · {Math.round((stats.timeouts / stats.n) * 100)}% timeouts
                 {stats.lastFailAt ? (
                   <span className="text-zinc-600">
                     {" "}
@@ -171,16 +201,20 @@ function EndpointCard({
             : "bg-gradient-to-r from-red-500/5 to-transparent"
         }`}
       />
-    </div>
+    </button>
   );
 }
 
 function EndpointGrid({
   results,
   history,
+  focusedEndpoint,
+  onFocusEndpoint,
 }: {
   results: CheckResult[];
   history: HistoryEntry[];
+  focusedEndpoint?: string;
+  onFocusEndpoint?: (name: string) => void;
 }) {
   const grouped = useMemo(() => {
     const groups: Record<string, CheckResult[]> = {};
@@ -232,7 +266,13 @@ function EndpointGrid({
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
               {items.map((r) => (
-                <EndpointCard key={r.name} r={r} stats={endpointStats.get(r.name)} />
+                <EndpointCard
+                  key={r.name}
+                  r={r}
+                  stats={endpointStats.get(r.name)}
+                  focused={focusedEndpoint === r.name}
+                  onFocus={onFocusEndpoint}
+                />
               ))}
             </div>
           </div>
@@ -260,6 +300,28 @@ export default function StatusCard() {
   });
 
   const [query, setQuery] = useState(() => searchParams.get("q") || "");
+
+  const [endpointFocus, setEndpointFocus] = useState(() => searchParams.get("endpoint") || "");
+
+  const focusEndpoint = useCallback((name: string) => {
+    setEndpointFocus(name);
+    setQuery(name);
+  }, []);
+
+  const clearEndpointFocus = useCallback(() => {
+    setEndpointFocus("");
+  }, []);
+
+
+  useEffect(() => {
+    const ep = searchParams.get("endpoint");
+    if (ep) {
+      setEndpointFocus(ep);
+      // If the endpoint is set, also seed the query filter to make it visible immediately.
+      setQuery(ep);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const doFetch = useCallback(async () => {
     setIsRefreshing(true);
@@ -335,10 +397,11 @@ export default function StatusCard() {
     const sp = new URLSearchParams();
     if (categoryFilter !== "all") sp.set("category", categoryFilter);
     if (query.trim()) sp.set("q", query.trim());
+    if (endpointFocus.trim()) sp.set("endpoint", endpointFocus.trim());
 
     const url = sp.toString() ? `/?${sp.toString()}` : "/";
     router.replace(url, { scroll: false });
-  }, [categoryFilter, query, router]);
+  }, [categoryFilter, query, endpointFocus, router]);
 
   const filteredResults = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -495,10 +558,32 @@ export default function StatusCard() {
         <div className="mt-2 text-[11px] text-zinc-500">
           Tip: share this filtered view by copying the URL.
         </div>
+        {endpointFocus ? (
+          <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-emerald-500/20 bg-emerald-950/10 px-3 py-2 text-xs text-emerald-200 flex-wrap">
+            <div className="min-w-0">
+              Focused endpoint: <span className="font-mono text-emerald-100">{endpointFocus}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                clearEndpointFocus();
+                setQuery("");
+              }}
+              className="rounded-lg border border-emerald-500/20 bg-zinc-950/30 px-2 py-1 text-[11px] text-emerald-200 hover:border-emerald-500/30"
+            >
+              Clear focus
+            </button>
+          </div>
+        ) : null}
       </div>
 
       {/* Individual Endpoint Cards */}
-      <EndpointGrid results={filteredResults} history={history} />
+      <EndpointGrid
+        results={filteredResults}
+        history={history}
+        focusedEndpoint={endpointFocus}
+        onFocusEndpoint={focusEndpoint}
+      />
 
       {state.kind === "ok" && !view.results.length && (
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 px-5 py-8 text-center">
