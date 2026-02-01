@@ -1,5 +1,9 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.17 — 2026-01-31
+
+- Add an endpoint stats table (failure rate + p95/avg latency + last OK/fail) derived from local browser history so you can quickly spot flaky or slow surfaces.
+
 ## 0.2.16 — 2026-01-31
 
 - Add a new “Recent Incidents” section that groups contiguous degraded checks into incident windows with approximate duration and most-impacted endpoints (derived from local browser history).

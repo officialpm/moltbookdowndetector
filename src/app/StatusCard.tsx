@@ -7,6 +7,7 @@ import StatusHistory, {
 } from "./components/StatusHistory";
 import ReliabilitySummary from "./components/ReliabilitySummary";
 import IncidentSummary from "./components/IncidentSummary";
+import EndpointStatsTable from "./components/EndpointStatsTable";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -407,6 +408,12 @@ export default function StatusCard() {
 
       {/* Incident Summary (derived from local history) */}
       <IncidentSummary history={history} />
+
+      {/* Endpoint-level stats table (derived from local history) */}
+      <EndpointStatsTable
+        history={history}
+        latestResults={view.results as CheckResult[]}
+      />
 
       {/* Filters */}
       <div className="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-4">
