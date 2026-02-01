@@ -1,5 +1,9 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.31 — 2026-01-31
+
+- Expand `/api/openapi` to be actually useful to agents/tools: add operation tags, richer component schemas (agent-check/status/probe), and concrete response examples (JSON + text/markdown).
+
 ## 0.2.30 — 2026-01-31
 
 - Add a one-click “Copy incident” button that generates a paste-ready Markdown incident summary from your latest probe + local history (useful for sharing in chats, filing issues, or grounding agents).
