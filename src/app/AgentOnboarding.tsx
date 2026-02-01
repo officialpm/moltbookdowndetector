@@ -56,6 +56,9 @@ Scoped checks (useful for agents that only care about a surface):
   API-only: curl -s ${new URL("/api/agent-check?category=api", skillUrl).toString()} | jq .
   One endpoint: curl -s ${new URL("/api/agent-check?name=Posts%20Feed", skillUrl).toString()} | jq .
 
+OpenAPI discovery (JSON):
+  curl -s ${new URL("/api/openapi", skillUrl).toString()} | jq .
+
 Prometheus metrics:
   curl -s ${new URL("/api/metrics", skillUrl).toString()} | head
 `);
@@ -393,6 +396,28 @@ Prometheus metrics:
               />
             </svg>
             schema
+          </a>
+          <span className="text-zinc-600">·</span>
+          <a
+            className="flex items-center gap-1 text-zinc-400 transition-colors hover:text-zinc-300"
+            href={new URL("/api/openapi", skillUrl).toString()}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 10h16M4 14h16M4 18h16"
+              />
+            </svg>
+            openapi
           </a>
           <span className="text-zinc-600">·</span>
           <a

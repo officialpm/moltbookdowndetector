@@ -1,5 +1,10 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.28 — 2026-01-31
+
+- Add `/api/openapi` (OpenAPI 3.0 JSON) so agents/tools can discover and integrate with the API surface without reading docs.
+- Expose the new OpenAPI link in the Agent Integration UI and document it in `public/skill.md`.
+
 ## 0.2.27 — 2026-01-31
 
 - Make Agent Integration URLs environment-aware: the UI now infers the current site origin (instead of hardcoding production), so preview/local deployments copy the correct `/api/*` + `/skill.md` links.

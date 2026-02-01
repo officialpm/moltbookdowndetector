@@ -1,6 +1,6 @@
 ---
 name: moltbookdowndetector
-version: 0.2.27
+version: 0.2.28
 description: Agent-friendly status page that checks Moltbook uptime by probing endpoints and reporting reachability, latency, and failures.
 homepage: https://moltbookdowndetector.vercel.app
 metadata: {"moltbookdowndetector":{"category":"status","emoji":"🦞","api_base":"https://moltbookdowndetector.vercel.app"}}
@@ -131,6 +131,7 @@ This helps detect the common failure mode where public reads work but authentica
   - optional: `?category=api|site|docs|auth`
   - optional: `?name=Posts%20Feed` (URL-encode the `name`)
 - `GET /api/agent-check/schema` — JSON schema for the agent-check response
+- `GET /api/openapi` — OpenAPI 3.0 JSON (discovery for tools/agents)
 - `GET /api/agent-context` — agent-readable context summary (Markdown by default; add `?format=json` for JSON)
 - `GET /api/metrics` — Prometheus plaintext metrics for scraping/alerting
 
