@@ -1,5 +1,10 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.15 — 2026-01-31
+
+- Add paste-friendly output formats to `/api/agent-check` via `?format=text|markdown` (default JSON), making it easier for agents/humans to log actionable status without JSON parsing.
+- Update Agent Integration UI snippet to include the new text-mode check.
+
 ## 0.2.14 — 2026-01-31
 
 - Add `/api/agent-context` endpoint that returns a paste-ready, agent-readable status summary (Markdown by default, JSON via `?format=json`) so agents can log/ground decisions without custom parsing.

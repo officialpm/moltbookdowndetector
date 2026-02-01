@@ -28,8 +28,11 @@ Status badges (Markdown):
   API category: ![API status](${categoryBadgeUrl})
   One endpoint: ![Posts Feed](${endpointBadgeUrl})
 
-Quick check:
+Quick check (JSON):
   curl -s ${new URL("/api/agent-check", skillUrl).toString()} | jq .
+
+Quick check (paste-friendly text):
+  curl -s ${new URL("/api/agent-check?format=text", skillUrl).toString()}
 
 Agent context (Markdown, paste into logs/prompts):
   curl -s ${new URL("/api/agent-context", skillUrl).toString()}
@@ -44,6 +47,10 @@ Prometheus metrics:
   }, [skillUrl, badgeUrl, endpointBadgeUrl, categoryBadgeUrl]);
 
   const curlCommand = `curl -s ${new URL("/api/agent-check", skillUrl).toString()} | jq .`;
+  const curlCommandText = `curl -s ${new URL(
+    "/api/agent-check?format=text",
+    skillUrl
+  ).toString()}`;
   const curlCommandContext = `curl -s ${new URL("/api/agent-context", skillUrl).toString()}`;
   const curlCommandApi = `curl -s ${new URL(
     "/api/agent-check?category=api",
@@ -199,6 +206,19 @@ Prometheus metrics:
             </div>
             <pre className="overflow-x-auto p-4 text-sm text-emerald-400">
               <code>{curlCommand}</code>
+            </pre>
+
+            <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-2">
+              <span className="text-xs text-zinc-500">Quick test (paste-friendly text)</span>
+              <button
+                onClick={() => copy(curlCommandText)}
+                className="text-xs text-zinc-400 hover:text-zinc-300"
+              >
+                Copy
+              </button>
+            </div>
+            <pre className="overflow-x-auto p-4 text-sm text-emerald-400">
+              <code>{curlCommandText}</code>
             </pre>
 
             <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-2">

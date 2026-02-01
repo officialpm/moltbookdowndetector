@@ -116,7 +116,7 @@ export async function GET() {
       },
       query: {
         description:
-          "Optional scoping params: ?category=site|api|docs|auth and/or ?name=<probe name>",
+          "Optional scoping params: ?category=site|api|docs|auth and/or ?name=<probe name>. Optional output format: ?format=json|text|markdown (default json).",
       },
       responseSchema: agentCheckResponseSchema(),
       example: exampleResponse(),
