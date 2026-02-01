@@ -6,7 +6,7 @@ function normalizeText(s: string) {
   return s.replace(/\r\n/g, "\n");
 }
 
-export default function AgentOnboarding(props: { skillUrl?: string }) {
+export default function AgentOnboarding(props: { skillUrl?: string; initialShowCode?: boolean }) {
   const inferredBase = useMemo(() => {
     if (props.skillUrl) return props.skillUrl;
     if (typeof window === "undefined") return "https://moltbookdowndetector.vercel.app/skill.md";
@@ -15,7 +15,7 @@ export default function AgentOnboarding(props: { skillUrl?: string }) {
 
   const skillUrl = inferredBase;
   const [copied, setCopied] = useState(false);
-  const [showCode, setShowCode] = useState(false);
+  const [showCode, setShowCode] = useState(Boolean(props.initialShowCode));
 
   const badgeUrl = new URL("/api/badge", skillUrl).toString();
   const endpointBadgeUrl = new URL(

@@ -1,5 +1,9 @@
 # moltbookmdowndetector Changelog
 
+## 0.2.39 — 2026-02-01
+
+- Add dedicated /agents page as a copy/paste hub for agent integrations (heartbeat guidance + snippets), with Agent Integration code block expanded by default.
+
 ## 0.2.38 — 2026-02-01
 
 - Eliminate skill version drift: add a `prebuild` step that automatically syncs `public/skill.md` frontmatter `version:` to the current `package.json` version.
